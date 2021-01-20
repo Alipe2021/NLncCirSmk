@@ -557,7 +557,7 @@ rule Analysis_09_2_3_CPATtoDetectORF:
         """
         source activate cpat_env && \
         cpat.py {params.opt} -x {input.hex} -d {input.rdata} -g {input.fasta} -o {params.prefix} --log-file={log} && \
-        if [[ -s {output.best} ]]; then SUCCESS! > {output.ok} ; fi && \
+        if [[ -s {output.best} ]]; then echo SUCCESS! > {output.ok} ; fi && \
         conda deactivate
         """
 ## ======== Step 10: Compare merged gtf to the reference gtf with gffcompare ========
