@@ -46,44 +46,44 @@ SAMPLE_GROUPS = config['sample_groups']
 rule all:
     input:
     ## Step 00: Prepare data
-        # expand( RESULTDIR + "Step00.Prepare/{sample}.R1.fq.gz", sample=SAMPLES ),
-        # expand( RESULTDIR + "Step00.Prepare/{sample}.R2.fq.gz", sample=SAMPLES ),
+        expand( RESULTDIR + "Step00.Prepare/{sample}.R1.fq.gz", sample=SAMPLES ),
+        expand( RESULTDIR + "Step00.Prepare/{sample}.R2.fq.gz", sample=SAMPLES ),
     ## Step 01: Filter fastq
-        # expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.R1.fq.gz", sample=SAMPLES ),
-        # expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.R2.fq.gz", sample=SAMPLES ),
-        # expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.json", sample=SAMPLES ),
-        # expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.html", sample=SAMPLES ),
-    # ## Step 02: Filter rRNA
-    #     expand( RESULTDIR + "Step02.FilterrRNA/{sample}.bam", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.1", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.2", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step02.FilterrRNA/{sample}/rRNA_filter.ok", sample=SAMPLES ),
-    # ## Step 03: Alianment to Genome
-    #     expand( RESULTDIR + "Step03.Hisat2Genome/{sample}.bam", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step03.Hisat2Genome/{sample}.summary.txt", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step03.Hisat2Genome/{sample}/un-conc-mate.ok", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step03.Hisat2Genome/{sample}/un-conc-mate.1", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step03.Hisat2Genome/{sample}/un-conc-mate.2", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step03.Hisat2Genome/un-conc-mate/{sample}.R1.fq.gz", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step03.Hisat2Genome/un-conc-mate/{sample}.R2.fq.gz", sample=SAMPLES ),
-    # ## Step 04-1: De novo Assembly Using Trinity
-    #     # RESULTDIR + "Step04.TrinityAssembly/trinity_outdir/trinity_outdir.Trinity.fasta",
-    #     # RESULTDIR + "Step04.TrinityAssembly/trinity_outdir/trinity_outdir.Trinity.ok
-    # ## Step 04-2: Reference Genome Guid Assembly
-    #     expand( RESULTDIR + "Step04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
-    # ## Step 05: Merge Assemblyed GTF
+        expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.R1.fq.gz", sample=SAMPLES ),
+        expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.R2.fq.gz", sample=SAMPLES ),
+        expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.json", sample=SAMPLES ),
+        expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.html", sample=SAMPLES ),
+    ## Step 02: Filter rRNA
+        expand( RESULTDIR + "Step02.FilterrRNA/{sample}.bam", sample=SAMPLES ),
+        expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.1", sample=SAMPLES ),
+        expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.2", sample=SAMPLES ),
+        expand( RESULTDIR + "Step02.FilterrRNA/{sample}/rRNA_filter.ok", sample=SAMPLES ),
+    ## Step 03: Alianment to Genome
+        expand( RESULTDIR + "Step03.Hisat2Genome/{sample}.bam", sample=SAMPLES ),
+        expand( RESULTDIR + "Step03.Hisat2Genome/{sample}.summary.txt", sample=SAMPLES ),
+        expand( RESULTDIR + "Step03.Hisat2Genome/{sample}/un-conc-mate.ok", sample=SAMPLES ),
+        expand( RESULTDIR + "Step03.Hisat2Genome/{sample}/un-conc-mate.1", sample=SAMPLES ),
+        expand( RESULTDIR + "Step03.Hisat2Genome/{sample}/un-conc-mate.2", sample=SAMPLES ),
+        expand( RESULTDIR + "Step03.Hisat2Genome/un-conc-mate/{sample}.R1.fq.gz", sample=SAMPLES ),
+        expand( RESULTDIR + "Step03.Hisat2Genome/un-conc-mate/{sample}.R2.fq.gz", sample=SAMPLES ),
+    ## Step 04-1: De novo Assembly Using Trinity
+        # RESULTDIR + "Step04.TrinityAssembly/trinity_outdir/trinity_outdir.Trinity.fasta",
+        # RESULTDIR + "Step04.TrinityAssembly/trinity_outdir/trinity_outdir.Trinity.ok
+    ## Step 04-2: Reference Genome Guid Assembly
+        expand( RESULTDIR + "Step04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
+    ## Step 05: Merge Assemblyed GTF
         RESULTDIR + "Step05.StringtieMerge/MergedList.txt",
         RESULTDIR + "Step05.StringtieMerge/StringtieMerged.gtf",
         RESULTDIR + "Step05.StringtieMerge/StringtieMerged.fa",
-    # ## Step 06: ReAssembly Transcripts Quantify
-    #     expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.gtf", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.coverage.cov", sample=SAMPLES ),
-    #     expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.GeneAbund.txt", sample=SAMPLES ),
-    # ## Step 07: Gene and Transcripts Expression analysis
-    #     RESULTDIR + "Step07.Expression/AssembledGtfList.txt",
-    #     RESULTDIR + "Step07.Expression/gene_count_matrix.csv",
-    #     RESULTDIR + "Step07.Expression/transcript_count_matrix.csv",
-    #     RESULTDIR + "Step07.Expression/transcript_tpm_matrix.tsv",
+    ## Step 06: ReAssembly Transcripts Quantify
+        expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.gtf", sample=SAMPLES ),
+        expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.coverage.cov", sample=SAMPLES ),
+        expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.GeneAbund.txt", sample=SAMPLES ),
+    ## Step 07: Gene and Transcripts Expression analysis
+        RESULTDIR + "Step07.Expression/AssembledGtfList.txt",
+        RESULTDIR + "Step07.Expression/gene_count_matrix.csv",
+        RESULTDIR + "Step07.Expression/transcript_count_matrix.csv",
+        RESULTDIR + "Step07.Expression/transcript_tpm_matrix.tsv",
     ## Step 08: DEG Analysis
         # RESULTDIR + "Step08.DEGs/transcript_count_filter_matrix.csv",
         # RESULTDIR + "Step08.DEGs/transcript_tpm_filter_matrix.csv",
@@ -105,15 +105,15 @@ rule all:
         RESULTDIR + "Step09.CPATIdentify/CpatMaize.r",
         RESULTDIR + "Step09.CPATIdentify/CpatMaize.DetectORF.ok",
     ## Step 10: Compare Merged GTF to Reference GTF
-        # RESULTDIR + "Step10.GffCompare/GffCompared.tracking",
-        # RESULTDIR + "Step10.GffCompare/GffCompared.annotated.gtf",
-        # RESULTDIR + "Step10.GffCompare/GffCompared.stats",
-        # RESULTDIR + "Step10.GffCompare/GffCompared.loci",
-        # RESULTDIR + "Step10.GffCompare/GffCompared.ok",
+        RESULTDIR + "Step10.GffCompare/GffCompared.tracking",
+        RESULTDIR + "Step10.GffCompare/GffCompared.annotated.gtf",
+        RESULTDIR + "Step10.GffCompare/GffCompared.stats",
+        RESULTDIR + "Step10.GffCompare/GffCompared.loci",
+        RESULTDIR + "Step10.GffCompare/GffCompared.ok",
     ## Step 11: LncRNA identify by CPC2,CNCI,Pfam ---- Fetch lncRNA class_code ixou, gtf, pep
-        # RESULTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.gtf",
-        # RESULTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.fa",
-        # RESULTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.pep.fa",
+        RESULTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.gtf",
+        RESULTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.fa",
+        RESULTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.pep.fa",
     ## Step 12: LncRNA identify by CPC2,CNCI,Pfam ---- LncRNA Protein Coding detection -- (CPC2,CNCI,PFAM)
         RESULTDIR + "Step12.CPC2LncRNAProteinPrediction/LncRNA_CPC2_Out.txt",
         RESULTDIR + "Step12.CPC2LncRNAProteinPrediction/LncRNA_CPC2_Noncoding.txt",
