@@ -1,0 +1,29 @@
+# Path to an uncompressed FASTA file with all transcript sequences.
+dna: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_dna_v4.fa
+gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma.v4.44.gtf
+cds: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_cds_v4.fa
+ncrna: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_ncrna_v4.fa
+dict: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_dna_v4.fa.dict
+rRNA: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/RNACentralv16_Plant_rRNA/PlantrRNA_RNACentralv16.fa
+pfamdb: /aucluster/auhpc1_data/pub/DATA/Pfam.33.1/Pfam-A/Pfam-A.hmm
+pfamdt: /aucluster/auhpc1_data/pub/DATA/Pfam.33.1/Pfam-A/Pfam-A.hmm.dat
+##
+transcript: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_cdna_v4.fa
+
+## 
+rRNA_bowtie2_index: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/RNACentralv16_Plant_rRNA/PlantrRNA_RNACentralv16.fa
+genome_hisat2_index: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/hisat2Index/genome.fa
+splice_sites: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/hisat2Index/zma_v4.44.ss
+
+# Path to a folder where intermediate files will be written.
+ResultDir: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/Result.v1/
+
+# Path to a YAML file with samples and their corresponding FASTQ files.
+SampleList: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/sample.yaml
+
+## GEG Analysis needed
+compare_pairs:  /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/compare_pairs.txt
+sample_groups: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/sample_groups.txt
+
+## Trinity needed
+TrinitySampleList: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/tinity_sample_list.txt
