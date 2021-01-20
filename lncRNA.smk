@@ -72,9 +72,9 @@ rule all:
     # ## Step 04-2: Reference Genome Guid Assembly
     #     expand( RESULTDIR + "Step04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
     # ## Step 05: Merge Assemblyed GTF
-    #     RESULTDIR + "Step05.StringtieMerge/MergedList.txt",
-    #     RESULTDIR + "Step05.StringtieMerge/StringtieMerged.gtf",
-    #     RESULTDIR + "Step05.StringtieMerge/StringtieMerged.fa",
+        RESULTDIR + "Step05.StringtieMerge/MergedList.txt",
+        RESULTDIR + "Step05.StringtieMerge/StringtieMerged.gtf",
+        RESULTDIR + "Step05.StringtieMerge/StringtieMerged.fa",
     # ## Step 06: ReAssembly Transcripts Quantify
     #     expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.gtf", sample=SAMPLES ),
     #     expand( RESULTDIR + "Step06.ReStringtieAssembly/{sample}.coverage.cov", sample=SAMPLES ),
@@ -89,15 +89,21 @@ rule all:
         # RESULTDIR + "Step08.DEGs/transcript_tpm_filter_matrix.csv",
         # RESULTDIR + "Step08.DGEbyEdgeR/DGEbyEdgeR.Result.ok",
     ## Step 09-1: LncRNA and novel mRNA identify by FEELnc
-        # RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_flt.gtf",
-        # RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.lncRNA.gtf",
-        # RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_classes.txt",
-    ## Step 09-2: LncRNA and novel mRNA identify by CAPT
-        # RESULTDIR + "Step09.CPATIdentify/Spacies_Hexamer.tsv",
-        # RESULTDIR + "Step09.CPATIdentify/CpatMaize.feature.xls",
-        # RESULTDIR + "Step09.CPATIdentify/CpatMaize.logit.RData",
-        # RESULTDIR + "Step09.CPATIdentify/CpatMaize.make_logitModel.r",
-        # RESULTDIR + "Step09.CPATIdentify/CpatMaize.make_logitModel.ok",
+        RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_flt.gtf",
+        RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.lncRNA.gtf",
+        RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_classes.txt",
+    ## Step 09-2-1: LncRNA and novel mRNA identify by CAPT
+        RESULTDIR + "Step09.CPATIdentify/Spacies_Hexamer.tsv",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.feature.xls",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.logit.RData",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.make_logitModel.r",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.make_logitModel.ok",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.ORF_seqs.fa",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.ORF_prob.tsv",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.ORF_prob.best.tsv",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.no_ORF.txt",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.r",
+        RESULTDIR + "Step09.CPATIdentify/CpatMaize.DetectORF.ok",
     ## Step 10: Compare Merged GTF to Reference GTF
         # RESULTDIR + "Step10.GffCompare/GffCompared.tracking",
         # RESULTDIR + "Step10.GffCompare/GffCompared.annotated.gtf",
@@ -326,8 +332,22 @@ rule Analysis_05_2_StingtieMerge:
         "-m 200 -c 3"
     shell:
         """
-        stringtie --merge {params} -p {threads} -G {input.gtf} -o {output.gtf} {input.lst} 2>{log} && \
-        gffread -w {output.fna} -g {input.fasta} {input.gtf}
+        stringtie --merge {params} -p {threads} -G {input.gtf} -o {output.gtf} {input.lst} 2>{log} 
+        """
+## ======== Step 05-3: StringTie Merged fasta Get ========
+rule Analysis_05_3_StingtieMergeFastaGet:
+    input:
+        refDNA = DNA,
+        gtf = RESULTDIR + "Step05.StringtieMerge/StringtieMerged.gtf"
+    output:
+        fna = RESULTDIR + "Step05.StringtieMerge/StringtieMerged.fa"
+    log:
+        RESULTDIR + "logs/Step05.StringtieMerge/StringtieMergeFastaGet.logs"
+    threads:
+        8
+    shell:
+        """
+        gffread -w {output.fna} -g {input.refDNA} {input.gtf} 2> {log}
         """
 ## ======== Step 06: Re Assembly by Stringtie ========
 rule Analysis_06_ReStringtieAssemble:
@@ -506,39 +526,39 @@ rule Analysis_09_2_2_CPATBuildLogitModel:
         RESULTDIR + "logs/Step09.CPATIdentify/CPATBuildLogitModel.log"
     params:
         opt = "--min-orf=30",
-        prefix = "CpatMaize"
+        prefix = RESULTDIR + "Step09.CPATIdentify/CpatMaize"
     shell:
         """
         source activate cpat_env && \
         make_logitModel.py {params.opt} -x {input.hex} -c {input.transcript} -n {input.ncrna} -o {params.prefix} --log-file={log} && \
-        if [[ -s {output.rdata} ]]; then echo SUCCESS! > {output.ok}; else exit 1; fi && \
+        if [[ -s {output.rdata} ]]; then echo SUCCESS! > {output.ok};  fi && \
         conda deactivate
         """
 ## ======== Step 09-2-3: LncRNA and Novel mRNA Identify by CPAT -- Detect ORF ========
 rule Analysis_09_2_3_CPATtoDetectORF:
     input:
-        hes = RESULTDIR + "Step09.CPATIdentify/Spacies_Hexamer.tsv",
+        hex = RESULTDIR + "Step09.CPATIdentify/Spacies_Hexamer.tsv",
         rdata = RESULTDIR + "Step09.CPATIdentify/CpatMaize.logit.RData",
         fasta = RESULTDIR + "Step05.StringtieMerge/StringtieMerged.fa"
     output:
-        seqs = RESULTDIR + "Step09.CPATIdentify/CaptMaize.ORF_seqs.fa",
-        peob = RESULTDIR + "Step09.CPATIdentify/CaptMaize.ORF_prob.tsv",
-        best = RESULTDIR + "Step09.CPATIdentify/CaptMaize.ORF_prob.best.tsv",
-        noorf = RESULTDIR + "Step09.CPATIdentify/CaptMaize.no_ORF.txt",
-        rscript = RESULTDIR + "Step09.CPATIdentify/CaptMaize.r",
+        seqs = RESULTDIR + "Step09.CPATIdentify/CpatMaize.ORF_seqs.fa",
+        peob = RESULTDIR + "Step09.CPATIdentify/CpatMaize.ORF_prob.tsv",
+        best = RESULTDIR + "Step09.CPATIdentify/CpatMaize.ORF_prob.best.tsv",
+        noorf = RESULTDIR + "Step09.CPATIdentify/CpatMaize.no_ORF.txt",
+        rscript = RESULTDIR + "Step09.CPATIdentify/CpatMaize.r",
         ok = RESULTDIR + "Step09.CPATIdentify/CaptMaize.DetectORF.ok"
     log:
         RESULTDIR + "logs/Step09.CPATIdentify/CPATtoDetectORF.log"
     params:
         opt = "--top-orf=5 --antisense --min-orf=75 --width=100 --best-orf=p",
-        prefix = "CaptMaize"
+        prefix = RESULTDIR + "Step09.CPATIdentify/CpatMaize"
     threads:
         1
     shell:
         """
         source activate cpat_env && \
         cpat.py {params.opt} -x {input.hex} -d {input.rdata} -g {input.fasta} -o {params.prefix} --log-file={log} && \
-        if [[ -s {output.best} ]]; then SUCCESS! > {output.ok} ;else exit 1; fi && \
+        if [[ -s {output.best} ]]; then SUCCESS! > {output.ok} ; fi && \
         conda deactivate
         """
 ## ======== Step 10: Compare merged gtf to the reference gtf with gffcompare ========
