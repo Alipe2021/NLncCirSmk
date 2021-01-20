@@ -322,8 +322,7 @@ rule Analysis_05_2_StingtieMerge:
         gtf = GTF,
         fasta = DNA
     output:
-        gtf = RESULTDIR + "Step05.StringtieMerge/StringtieMerged.gtf",
-        fna = RESULTDIR + "Step05.StringtieMerge/StringtieMerged.fa"
+        gtf = RESULTDIR + "Step05.StringtieMerge/StringtieMerged.gtf"
     log:
         RESULTDIR + "logs/Step05.StringtieMerge/StringtieMerge.logs"
     threads:
@@ -546,7 +545,7 @@ rule Analysis_09_2_3_CPATtoDetectORF:
         best = RESULTDIR + "Step09.CPATIdentify/CpatMaize.ORF_prob.best.tsv",
         noorf = RESULTDIR + "Step09.CPATIdentify/CpatMaize.no_ORF.txt",
         rscript = RESULTDIR + "Step09.CPATIdentify/CpatMaize.r",
-        ok = RESULTDIR + "Step09.CPATIdentify/CaptMaize.DetectORF.ok"
+        ok = RESULTDIR + "Step09.CPATIdentify/CpatMaize.DetectORF.ok"
     log:
         RESULTDIR + "logs/Step09.CPATIdentify/CPATtoDetectORF.log"
     params:
