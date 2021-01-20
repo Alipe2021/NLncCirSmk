@@ -54,10 +54,10 @@ rule all:
         expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.json", sample=SAMPLES ),
         expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.html", sample=SAMPLES ),
     ## Step 02: Filter rRNA
-        expand( RESULTDIR + "Step02.FilterrRNA/{sample}.bam", sample=SAMPLES ),
-        expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.1", sample=SAMPLES ),
-        expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.2", sample=SAMPLES ),
-        expand( RESULTDIR + "Step02.FilterrRNA/{sample}/rRNA_filter.ok", sample=SAMPLES ),
+        # expand( RESULTDIR + "Step02.FilterrRNA/{sample}.bam", sample=SAMPLES ),
+        # expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.1", sample=SAMPLES ),
+        # expand( RESULTDIR + "Step02.FilterrRNA/{sample}/un-conc-mate.2", sample=SAMPLES ),
+        # expand( RESULTDIR + "Step02.FilterrRNA/{sample}/rRNA_filter.ok", sample=SAMPLES ),
     ## Step 03: Alianment to Genome
         expand( RESULTDIR + "Step03.Hisat2Genome/{sample}.bam", sample=SAMPLES ),
         expand( RESULTDIR + "Step03.Hisat2Genome/{sample}.summary.txt", sample=SAMPLES ),
