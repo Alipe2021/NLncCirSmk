@@ -1,6 +1,8 @@
 # Path to an uncompressed FASTA file with all transcript sequences.
 dna: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_dna_v4.fa
 gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma.v4.44.gtf
+mrna_gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_mrna.v4.44.gtf
+lncrna_gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_lncrna.v4.44.gtf
 cds: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_cds_v4.fa
 ncrna: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_ncrna_v4.fa
 dict: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_dna_v4.fa.dict

@@ -28,6 +28,9 @@ CDS = config["cds"]
 NCRNA = config["ncrna"]
 TRANSCRIPT = config["transcript"]
 
+MRNA_GTF = config["mrna_gtf"]
+LNCRNA_GTF = config["lncrna_gtf"]
+
 rRNA = config["rRNA"]
 PFAMDB = os.path.dirname(config["pfamdb"])
 
@@ -453,9 +456,13 @@ rule Analysis_09_1_2_FEELnc_codpot:
     input:
         refFa  = DNA,
         refGtf = GTF,
+        mrna_gtf = MRNA_GTF,
+        lncrna_gtf = LNCRNA_GTF,
         flt = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_flt.gtf"
     output:
-        cod = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.lncRNA.gtf"
+        cod = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.lncRNA.gtf",
+        rna = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.mRNA.gtf",
+        orf = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.noORF.gtf"        
     log:
         RESULTDIR + "logs/Step09.FEELncIdentify/FEELncPrediction.codpot.log"
     threads:
@@ -468,7 +475,7 @@ rule Analysis_09_1_2_FEELnc_codpot:
     shell:
         """
         source activate /aucluster/auhpc1_data/pub/miniconda3/envs/feelnc_install_dir && \
-        FEELnc_codpot.pl {params.cod_opt1} {params.cod_opt2} -p {threads} -i {input.flt} -a {input.refGtf} -g {input.refFa} --outdir={params.cod_dir} --outname={params.cod_name} 2> {log} && \
+        FEELnc_codpot.pl {params.cod_opt1} {params.cod_opt2} -p {threads} -i {input.flt} -a {input.refGtf} -g {input.refFa} -l {input.lncrna_gtf} --outdir={params.cod_dir} --outname={params.cod_name} 2> {log} && \
         conda deactivate
         """
 ## ======== Step 09-1-3: lncRNA and novel mRNA prediction by FEElnc ========
