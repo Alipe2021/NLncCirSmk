@@ -462,7 +462,10 @@ rule Analysis_09_1_2_FEELnc_codpot:
     output:
         cod = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.lncRNA.gtf",
         rna = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.mRNA.gtf",
-        orf = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.noORF.gtf"        
+        orf = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.noORF.gtf",
+        rld = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot_RF_learningData.txt",
+        rsc = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot_RF_statsLearn_CrossValidation.txt",
+        rft = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot_RF.txt"
     log:
         RESULTDIR + "logs/Step09.FEELncIdentify/FEELncPrediction.codpot.log"
     threads:
@@ -471,7 +474,7 @@ rule Analysis_09_1_2_FEELnc_codpot:
         cod_opt1 = "-b transcript_biotype=protein_coding --mode=shuffle --sizeinter=0.75",
         cod_opt2 = "--learnorftype=3 --testorftype=3 --ntree 500 --seed=1234",
         cod_dir = RESULTDIR + "Step09.FEELncIdentify/",
-        cod_name = "Candidate_lncRNA_codpot"
+        cod_name = RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot"
     shell:
         """
         source activate /aucluster/auhpc1_data/pub/miniconda3/envs/feelnc_install_dir && \
@@ -489,13 +492,13 @@ rule Analysis_09_1_3_FEELnc_classifier:
     log:
         RESULTDIR + "logs/Step09.FEELncIdentify/FEELncPrediction.class.log"
     threads:
-        20
+        1
     params:
         ""
     shell:
         """
         source activate /aucluster/auhpc1_data/pub/miniconda3/envs/feelnc_install_dir && \
-        FEELnc_classifier.pl {params} -i {input.cod} -a {input.refGtf} > {output.cla} 2> {log} && \
+        FEELnc_classifier.pl {params} -i {input.cod} -a {input.refGtf} > {output.cla} -l {log} && \
         conda deactivate
         """
 ## ======== Step 09-2-1: LncRNA and Novel mRNA Identify by CPAT -- Build Hexamer Table ========
