@@ -12,6 +12,9 @@ pfamdt: /aucluster/auhpc1_data/pub/DATA/Pfam.33.1/Pfam-A/Pfam-A.hmm.dat
 ##
 transcript: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_cdna_v4.fa
 
+## CPAT Need
+TraningCDS: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/Traningdata/zma_cds.2532.fa
+TraningLnc: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/Traningdata/zma_lncRNA.v4.44.fa
 ## 
 rRNA_bowtie2_index: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/RNACentralv16_Plant_rRNA/PlantrRNA_RNACentralv16.fa
 genome_hisat2_index: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/hisat2Index/genome.fa

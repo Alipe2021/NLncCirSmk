@@ -31,6 +31,10 @@ TRANSCRIPT = config["transcript"]
 MRNA_GTF = config["mrna_gtf"]
 LNCRNA_GTF = config["lncrna_gtf"]
 
+## CPAT Needed
+TRANCDS = config['TraningCDS']
+TRANLNC = config['TraningLnc']
+
 rRNA = config["rRNA"]
 PFAMDB = os.path.dirname(config["pfamdb"])
 
@@ -96,7 +100,7 @@ rule all:
         RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.lncRNA.gtf",
         RESULTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_classes.txt",
     ## Step 09-2-1: LncRNA and novel mRNA identify by CAPT
-        RESULTDIR + "Step09.CPATIdentify/Spacies_Hexamer.tsv",
+        RESULTDIR + "Step09.CPATIdentify/Maize_Hexamer.tsv",
         RESULTDIR + "Step09.CPATIdentify/CpatMaize.feature.xls",
         RESULTDIR + "Step09.CPATIdentify/CpatMaize.logit.RData",
         RESULTDIR + "Step09.CPATIdentify/CpatMaize.make_logitModel.r",
@@ -504,10 +508,10 @@ rule Analysis_09_1_3_FEELnc_classifier:
 ## ======== Step 09-2-1: LncRNA and Novel mRNA Identify by CPAT -- Build Hexamer Table ========
 rule Analysis_09_2_1_CPATBuildHexamerTable:
     input:
-        cds = CDS,
-        ncrna = NCRNA
+        cds = TRANCDS,
+        ncrna = TRANLNC
     output:
-        RESULTDIR + "Step09.CPATIdentify/Spacies_Hexamer.tsv"
+        RESULTDIR + "Step09.CPATIdentify/Maize_Hexamer.tsv"
     log:
         RESULTDIR + "logs/Step09.CPATIdentify/CPATBuildHexamerTable.log"
     threads:
@@ -546,7 +550,7 @@ rule Analysis_09_2_2_CPATBuildLogitModel:
 ## ======== Step 09-2-3: LncRNA and Novel mRNA Identify by CPAT -- Detect ORF ========
 rule Analysis_09_2_3_CPATtoDetectORF:
     input:
-        hex = RESULTDIR + "Step09.CPATIdentify/Spacies_Hexamer.tsv",
+        hex = RESULTDIR + "Step09.CPATIdentify/Maize_Hexamer.tsv",
         rdata = RESULTDIR + "Step09.CPATIdentify/CpatMaize.logit.RData",
         fasta = RESULTDIR + "Step05.StringtieMerge/StringtieMerged.fa"
     output:
@@ -559,7 +563,7 @@ rule Analysis_09_2_3_CPATtoDetectORF:
     log:
         RESULTDIR + "logs/Step09.CPATIdentify/CPATtoDetectORF.log"
     params:
-        opt = "--top-orf=5 --antisense --min-orf=75 --width=100 --best-orf=p",
+        opt = "--top-orf=5 --antisense --min-orf=100 --width=100 --best-orf=p",
         prefix = RESULTDIR + "Step09.CPATIdentify/CpatMaize"
     threads:
         1
