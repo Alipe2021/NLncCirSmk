@@ -22,6 +22,7 @@ SAMPLES = sorted(SAMPLEFILES.keys())
 RESULTDIR = config["ResultDir"]
 
 ## Set reference file
+BED = config["bed"]
 DNA = config["dna"]
 GTF = config["gtf"]
 CDS = config["cds"]
@@ -145,10 +146,11 @@ rule all:
     ## Step 17: 
     ## Step 18: 
     ## Step 19: 
-
     ## Report S01: Fastq Filter Result
         # RESULTDIR + "Report/S01.FastqFilter.jsonlist.txt",
         # RESULTDIR + "Report/S01.FastqFilter-State.tsv"
+    ## Report S03: Read distribution by RseQC 3.0
+        expand( RESULTDIR + "Report/S03.ReadDistribution/{sample}.state.tsv", sample=SAMPLES )
 #########################################################################################
 ## ======== Step 0: Prepare Work ========
 rule Analysis_00_PrepareFastQ:
@@ -653,7 +655,6 @@ rule Analysis_12_1_CPC2LncRNAProteinPrediction_1:
         CPC2.py -i {input.fa} -o {params.pfx} 2> {log} ; fi && \
         conda deactivate
         """
-
 ## ======== Step 12-1: lncRNA fasta protein prodiction CPC2 ========
 rule Analysis_12_1_CPC2LncRNAProteinPrediction_2:
     input:
@@ -812,7 +813,7 @@ rule Analysis_14_1_CPC2NovelmRNAProteinPrediction_2:
 ## ======== Step 14-2: Candidate Novel mRNA fasta protein prediction CNCI ========
 rule Analysis_14_2_CNCINovelmRNAProteinPrediction_1:
     input:
-        RESULTDIR + "Step13.NovelmRNAIdentify/Candidate_Novel_mRNA.fa"
+        RESULTDIR + "Step13.NovelmRNAIdentify/Candidate_Novel_mRNA.orf_cds.fa"
     output:
         cnci = protected(RESULTDIR + "Step14.CNCINovelmRNAProteinPrediction/NovelmRNA_CNCI/CNCI.index"),
         log =  RESULTDIR + "Step14.CNCINovelmRNAProteinPrediction/NovelmRNA_CNCI.log"
@@ -879,7 +880,7 @@ rule Analysis_14_3_PfamScanNovelmRNAPrediction_2:
 
 #########################################################################################
 ## -------- Report 01: Fastq Filter Result --------
-rule Report_01_FastqFilterState:
+rule Report_01_FastqFilterState1:
     input:
         expand( RESULTDIR + "Step01.FastqFilter/{sample}/{sample}.json", sample=SAMPLES )
     output:
@@ -902,6 +903,27 @@ rule Report_01_FastqFilterState2:
         """
 ## -------- Report 02: rRNA Filter Result --------
 ## -------- Report 03: Genome alianment Result --------
+rule Report_03_ReadDistribution:
+    input:
+        bed = BED,
+        bam = RESULTDIR + "Step03.Hisat2Genome/{sample}.bam"        
+    output:
+        RESULTDIR + "Report/S03.ReadDistribution/{sample}.state.tsv"
+    log:
+        RESULTDIR + "logs/Report/S03.GenomeAlianmentStatebyRseQC.{sample}.log"
+    params:
+        prx = RESULTDIR + "Report/S03.ReadDistribution/",
+        log_dir = RESULTDIR + "logs/Report/"
+    shell:
+        """
+        source activate py3.7 && \
+        if [ ! -d {params.prx} ]; then mkdir -p {params.prx}; fi && \
+        if [ ! -d {params.log_dir} ]; then mkdir -p {params.log_dir}; fi && \
+        read_distribution.py -i {input.bam} -r {input.bed} > {output} 2> {log} && \
+        conda deactivate
+        """
+
+
 ## -------- Report 04: Genome guid assembly Result --------
 ## -------- Report 05: Genome guid assembly Result --------
 ## -------- Report 06: Genome guid assembly Result --------

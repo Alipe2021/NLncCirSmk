@@ -1,4 +1,5 @@
 # Path to an uncompressed FASTA file with all transcript sequences.
+bed: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_v4.44.bed
 dna: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_dna_v4.fa
 gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma.v4.44.gtf
 mrna_gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_mrna.v4.44.gtf
