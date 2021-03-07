@@ -39,3 +39,5 @@ snakemake -p -s LncCir.smk -j <threads>
 
 * threads: The threads number for use. Less than max threads.
 
+# Further
+More features will be added soon ...
