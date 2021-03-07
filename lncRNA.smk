@@ -5,7 +5,7 @@ import pandas as pd
 import json
 import sys
 
-''' Snakemake file for lncRNA and novel mRNA Analysis Workflow
+''' Snakemake file for lncRNA, novel mRNA, and Circular RNA Analysis Workflow
     Author: Alipe
     E-mail: sxliulian2012@hotmail.com
       Date: 2021-01-12 22:55
