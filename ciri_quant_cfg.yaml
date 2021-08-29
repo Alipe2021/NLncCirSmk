@@ -1,0 +1,12 @@
+name: zma
+tools:
+  bwa: /opt/miniconda3/envs/LncCirSmk/bin/bwa
+  hisat2: /opt/miniconda3/envs/LncCirSmk/bin/hisat2
+  stringtie: /opt/miniconda3/envs/LncCirSmk/bin/stringtie
+  samtools: /opt/miniconda3/envs/LncCirSmk/bin/samtools
+
+reference:
+  fasta: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
+  gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma.v4.44.gtf
+  bwa_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/BwaIndex/genome.fa
+  hisat_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/hisat2Index/genome.fa
