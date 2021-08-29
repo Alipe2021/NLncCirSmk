@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-
+#
 from genericpath import exists
 import re, os, yaml, json, sys
 from typing_extensions import TypeVarTuple
 from typing import runtime_checkable
 import pandas as pd
-
+#
 """
     Title:      Snakemake File for LncRNA, Novel mRNA, and Circular RNA Analysis
     Author:     Alipe
@@ -14,7 +14,7 @@ import pandas as pd
     Date:       2021-05-08 16:31
     Update:     2021-08-16 11:37
 """
-
+#
 # 1. Raw Reads --> Clean Reads --[filter rRNA]--> rRNA-free Reads
 # 2. rRNA-free Reads --[mapp to genome]--> Assembly --> Merged Info -
 #    -> Re-assembly --> LncRNA/Novel mRNA Identification --> DELs/DEMs -
@@ -22,7 +22,7 @@ import pandas as pd
 # 3. rRNA-free Reads --[mapp to genome]--> CircRNA Identification - 
 #    -> CircRNA Quantification --> DECs --> miRNA Sponge ...
 # 4. CeRNA Identification
-
+#
 ## ================ Load Global Configurations ================= ##
 configfile: 'config.yaml'             # load config file
 #
@@ -51,17 +51,13 @@ MRNA_GTF = config["mrna_gtf"]       # known mRNA gtf, need for FEELnc
 LNCRNA_GTF = config["lncrna_gtf"]   # known lncRNA gtf, need for FEElnc
 PFAMDB = os.path.dirname(config["pfamdb"]) # PFAM database, need for Protein Prediction
 #
-# TRANCDS = config['TraningCDS']    # load traning cds fasta, need for CPAT
-# TRANLNC = config['TraningLnc']    # load traning lncRNA fasta, need for CPAT
-#
 # Specifically Needed for CircRNA Identification and Quantification
 BWA_DNA_INDEX   = config["genome_bwa_index"]    # bwa index for genome mapping, need for CIRI2
 CIRI_QUANT_CFG  = config["ciri_quant_cfg"]      # yaml format config file for CIRIquant
 #
-# DEGs Analysis
+# DEGs Analysis Needed
 COMPARE_PAIRS = config['compare_pairs']         # comparation paris
 SAMPLE_GROUPS = config['sample_groups']         # sample group information
-#
 #
 ## ============================================================ ##
 #                    Start Steps for each Module                 #
@@ -94,7 +90,7 @@ SAMPLE_GROUPS = config['sample_groups']         # sample group information
 #                     佛祖保佑         永无BUG                    #
 #                                                                #
 ##################################################################
-
+#
 rule all:
     input:
   ## -------------- Part 01 Data Preprocessing ---------------- ##
@@ -115,104 +111,133 @@ rule all:
         expand( OUTPUTDIR + "Part01_Common_Analysis_03.rRNAFreeFastq/{sample}.R1.fq.gz", sample=SAMPLES ),
         expand( OUTPUTDIR + "Part01_Common_Analysis_03.rRNAFreeFastq/{sample}.R2.fq.gz", sample=SAMPLES ),
   ##
-  ## -------------- Part 02 LncRNA Identification ------------- ##
-    # Step 01: Alianment to Reference Genome
-        expand( OUTPUTDIR + "Part02_Common_Analysis_01.Bowtie2ToGenome/{sample}.sorted.bam", sample=SAMPLES ),
-    # Step 02:
-    # Step 03:
-    # Step 04:
-    # Step 05:
-    # Step 06:
-    # Step 07:
-    # Step 08:
-  ## -------------- Part 03 Novel mRNA Identification --------- ##
-  ## -------------- Part 04 Expression Analysis --------------- ##
+  ## -------------- Part 02 Mapping and Assembly -------------- ##
+    # Step 01: Align to reference genome
+        expand( OUTPUTDIR + "Part02_MappingAndAssembly/01.Hisat2Genome/{sample}.bam", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part02_MappingAndAssembly/01.Hisat2Genome/{sample}.summary.txt", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part02_MappingAndAssembly/01.Hisat2Genome/{sample}/un-conc-mate.1", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part02_MappingAndAssembly/01.Hisat2Genome/{sample}/un-conc-mate.2", sample=SAMPLES ),
+    # Step 02: ReName un-conc-gz
+        expand( OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R1.fq.gz", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R2.fq.gz", sample=SAMPLES ),
+    # Step 03: Trinity Assembly
+        OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.fasta",
+        OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.ok",
+    # Step 04: Stringtie Assembly
+        expand( OUTPUTDIR + "Part02_MappingAndAssembly/04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
+    # Step 05: Make gtf List
+        OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt",
+    # Step 06: Merge transcript
+        OUTPUTDIR + "Part02_MappingAndAssembly/06.StringtieMerge/StringtieMerged.gtf",
+    # Step 07: Compare to reference annotation
+        OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.annotated.gtf",
+        OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.stats",
+        OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.tracking",
+        OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.loci",
+        OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.ok"
   ##
-  ## -------------- Part 05 CircRNA Identification ------------ ##
+  ## -------------- Part 03 LncRNA Identification ------------- ##
+    # Step 01: Fetch class code "i", "o", "x", and "u"
+        OUTPUTDIR + "Part03_LncRNA_Identification/01.CandidateLncRNAGtf/GffCompared.ioux.gtf",
+    # Step 02: Fetch Candidate lncRNA fasta
+        OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
+        OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.tmp",
+        OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.pep.fa",
+    # Step 03: lncRNA protein coding potential prodiction with CPC2
+        OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2PredictOut.txt",
+        OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2_Noncoding.txt",
+    # Step 04: LncRNA protein coding potential prediction with CNCI
+        OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict/CNCI.index",
+        OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.txt",
+    # Step 05: LncRNA protein coding potential prediction with PfamScan
+        OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/PfamPredictOut.txt",
+        OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/Pfam_Coding.txt",
+    # Step 06: LncRNA Identification by FEElnc, S1: filter
+        OUTPUTDIR + "Part03_LncRNA_Identification/06.FEELnc_filter/Candidate_lncRNA_flt.gtf",
+    # Step 07: LncRNA Identification by FEElnc, S2: codpot predict
+        OUTPUTDIR + "Part03_LncRNA_Identification/07.FEELnc_codpot/Candidate_lncRNA_codpot.lncRNA.gtf",
+        OUTPUTDIR + "Part03_LncRNA_Identification/07.FEELnc_codpot/Candidate_lncRNA_codpot.mRNA.gtf",
+        OUTPUTDIR + "Part03_LncRNA_Identification/07.FEELnc_codpot/Candidate_lncRNA_codpot.noORF.gtf",
+        OUTPUTDIR + "Part03_LncRNA_Identification/07.FEELnc_codpot/Candidate_lncRNA_codpot_RF_learningData.txt",
+        OUTPUTDIR + "Part03_LncRNA_Identification/07.FEELnc_codpot/Candidate_lncRNA_codpot_RF_statsLearn_CrossValidation.txt",
+        OUTPUTDIR + "Part03_LncRNA_Identification/07.FEELnc_codpot/Candidate_lncRNA_codpot_RF.txt",
+    # Step 08: LncRNA Identification by FEElnc, S3: classifier
+        OUTPUTDIR + "Part03_LncRNA_Identification/08.FEELnc_classifier/Candidate_lncRNA_classes.txt",
+  ##
+  ## -------------- Part 04 Novel mRNA Identification --------- ##
+    # Step 01: Fetch Candidate Novel mRNA GTF
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/01.FetchCandidateNovelmRNAGtf/GffCompared.ju.gtf",
+    # Step 02: Fetch Candidate Novel mRNA fasta
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/02.FetchCandidateNovelmRNAFas/GffCompared.ju.fa",
+    # Step 03: Fetch Gene<\t>Transcript table
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/03.Gene2Tanscript/GffCompared_ju.g2t.txt",
+    # Step 04: Fetch Candidate Novel mRNA ORF
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.pep",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.gff3",
+    # Step 05: Novel mRNA protein coding potential prodict by CPC2
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt",
+    # Step 06: Novel mRNA protein coding potential prodict by CNCI
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI.index",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.txt",
+    # Step 07: Novel mRNA protein coding potential prodict by Pfam
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/07.CodingPotential_Pfam/PfamPredictOut.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/07.CodingPotential_Pfam/Pfam_Coding.txt",
+    # Step 08: Random fetch fas for CPAT
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_CDS.fa",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_Noc.fa",
+    # Step 09: Novel mRNA protein coding potential prodict by CPAT-BuildHexamerTable
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/Maize_Hexamer.tsv",
+    # Step 10: Novel mRNA protein coding potential prodict by CPAT-Build Logit Model
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.feature.xls",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.logit.RData",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.make_logitModel.r",
+    # Step 11: Novel mRNA protein coding potential prodict by CPAT-Detect ORF
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_seqs.fa",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.tsv",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.best.tsv",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.no_ORF.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.r",
+  ##
+  ## -------------- Part 05 Expression Analysis --------------- ##
+    # Step 01: Re Assembly by Stringtie
+        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.gtf", sample = SAMPLES),
+        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssembly/{sample}.coverage.cov", sample = SAMPLES),
+        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssembly/{sample}.GeneAbund.txt", sample = SAMPLES),
+    # Step 02: Get assembled gtf list
+        OUTPUTDIR + "Part05_Expression_Analysis/02.GetAssembledGtfList/AssembledGtfList.txt",
+    # Step 03: Get gene and transcripts count matrix
+        OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/gene_count_matrix.csv",
+        OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/transcript_count_matrix.csv",
+        OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/transcript_tpm_matrix.tsv",
+    # Step 04: Different Expression Analysis by edgeR
+        OUTPUTDIR + "Part05_Expression_Analysis/04.DGEbyEdgeR2/DGEbyEdgeR2.Result.ok",    
+  ##
+  ## -------------- Part 06 CircRNA Identification ------------ ##
     # Step 01: Map to Genome with BWA-MEM
         expand( OUTPUTDIR + "Part06_CircRNA_Analysis_01.BWA2Genome/{sample}.sam", sample=SAMPLES ),
     # Step 02: CircRNA identification with CIRI2
         expand( OUTPUTDIR + "Part06_CircRNA_Analysis_02.CIRI2_Prediction/{sample}.ciri", sample=SAMPLES ),
     # Step 03: CircRNA quantitation with CIRIquant
         expand( OUTPUTDIR + "Part06_CircRNA_Analysis_03.CircRNA_Quantitation/{sample}/{sample}.gtf", sample=SAMPLES ),
-    # Step 04: 
-    # Step 04: 
-    # Step 04: 
-    # Step 04: 
+    # Step 04: Identify circRNA by find_circ -- 1.mapping
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/04.Bowtie2ToGenome/{sample}.sorted.bam", sample=SAMPLES),
+    # Step 05: Identify circRNA by find_circ -- 2.Fetch unmapped read with bowtie2
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bam", sample=SAMPLES),
+    # Step 06: Identify circRNA by find_circ -- 3.Convert bam to qfa
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/06.Bam2Anchors/{sample}/unmapped_anchors.fq.gz", sample=SAMPLES),
+    # Step 07: Identify circRNA by find_circ -- 4.Find circRNA
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/spliced_reads.fa", sample = SAMPLES),
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/spliced_reads.bed", sample = SAMPLES),
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/stat.txt", sample = SAMPLES),
+    # Step 08: Identify circRNA by find_circ -- 5.Merge all samples bed
+        OUTPUTDIR + "Part06_CircRNA_Analysis/08.MergeAllSamplesBed/merged_spliced_reads.bed",
+        OUTPUTDIR + "Part06_CircRNA_Analysis/08.MergeAllSamplesBed/merged_stat.txt",
+    # Step 09: Identify circRNA by find_circ -- 6.Fetch Good circRNA
+        OUTPUTDIR + "Part06_CircRNA_Analysis/09.FinalCircRNA/circ_candidates.bed", 
 
-    #         
-        ## Step 04-1: De novo Assembly Using Trinity
-            # OUTPUTDIR + "Step04.TrinityAssembly/trinity_outdir/trinity_outdir.Trinity.fasta",
-            # OUTPUTDIR + "Step04.TrinityAssembly/trinity_outdir/trinity_outdir.Trinity.ok
-        ## Step 04-2: Reference Genome Guid Assembly
-            # expand( OUTPUTDIR + "Step04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
-        # ## Step 05: Merge Assemblyed GTF
-        #     OUTPUTDIR + "Step05.StringtieMerge/MergedList.txt",
-        #     OUTPUTDIR + "Step05.StringtieMerge/StringtieMerged.gtf",
-        #     OUTPUTDIR + "Step05.StringtieMerge/StringtieMerged.fa",
-        # ## Step 06: ReAssembly Transcripts Quantify
-        #     expand( OUTPUTDIR + "Step06.ReStringtieAssembly/{sample}.gtf", sample=SAMPLES ),
-        #     expand( OUTPUTDIR + "Step06.ReStringtieAssembly/{sample}.coverage.cov", sample=SAMPLES ),
-        #     expand( OUTPUTDIR + "Step06.ReStringtieAssembly/{sample}.GeneAbund.txt", sample=SAMPLES ),
-        # ## Step 07: Gene and Transcripts Expression analysis
-        #     OUTPUTDIR + "Step07.Expression/AssembledGtfList.txt",
-        #     OUTPUTDIR + "Step07.Expression/gene_count_matrix.csv",
-        #     OUTPUTDIR + "Step07.Expression/transcript_count_matrix.csv",
-        #     OUTPUTDIR + "Step07.Expression/transcript_tpm_matrix.tsv",
-        # ## Step 08: DEG Analysis
-        #     # OUTPUTDIR + "Step08.DEGs/transcript_count_filter_matrix.csv",
-        #     # OUTPUTDIR + "Step08.DEGs/transcript_tpm_filter_matrix.csv",
-        #     # OUTPUTDIR + "Step08.DGEbyEdgeR/DGEbyEdgeR.Result.ok",
-        # ## Step 09-1: LncRNA and novel mRNA identify by FEELnc
-        #     OUTPUTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_flt.gtf",
-        #     OUTPUTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_codpot.lncRNA.gtf",
-        #     OUTPUTDIR + "Step09.FEELncIdentify/Candidate_lncRNA_classes.txt",
-        # ## Step 09-2-1: LncRNA and novel mRNA identify by CAPT
-        #     OUTPUTDIR + "Step09.CPATIdentify/Maize_Hexamer.tsv",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.feature.xls",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.logit.RData",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.make_logitModel.r",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.make_logitModel.ok",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.ORF_seqs.fa",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.ORF_prob.tsv",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.ORF_prob.best.tsv",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.no_ORF.txt",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.r",
-        #     OUTPUTDIR + "Step09.CPATIdentify/CpatMaize.DetectORF.ok",
-        # ## Step 10: Compare Merged GTF to Reference GTF
-        #     OUTPUTDIR + "Step10.GffCompare/GffCompared.tracking",
-        #     OUTPUTDIR + "Step10.GffCompare/GffCompared.annotated.gtf",
-        #     OUTPUTDIR + "Step10.GffCompare/GffCompared.stats",
-        #     OUTPUTDIR + "Step10.GffCompare/GffCompared.loci",
-        #     OUTPUTDIR + "Step10.GffCompare/GffCompared.ok",
-        # ## Step 11: LncRNA identify by CPC2,CNCI,Pfam ---- Fetch lncRNA class_code ixou, gtf, pep
-        #     OUTPUTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.gtf",
-        #     OUTPUTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.fa",
-        #     OUTPUTDIR + "Step11.LncRNAIdentify/Candidate_lncRNA.pep.fa",
-        # ## Step 12: LncRNA identify by CPC2,CNCI,Pfam ---- LncRNA Protein Coding detection -- (CPC2,CNCI,PFAM)
-        #     OUTPUTDIR + "Step12.CPC2LncRNAProteinPrediction/LncRNA_CPC2_Out.txt",
-        #     OUTPUTDIR + "Step12.CPC2LncRNAProteinPrediction/LncRNA_CPC2_Noncoding.txt",
-        #     OUTPUTDIR + "Step12.CNCILncRNAProteinPrediction/LncRNA_CNCI/CNCI.index",
-        #     OUTPUTDIR + "Step12.CNCILncRNAProteinPrediction/LncRNA_CNCI_Noncoding.txt",
-        #     OUTPUTDIR + "Step12.PfamScanLncRNAPrediction/LncRNA_PfamScan.Result.txt",
-        #     OUTPUTDIR + "Step12.PfamScanLncRNAPrediction/LncRNA_PfamScan_Coding.txt",
-        # ## Step 13: Novel mRNA identify by CPC2,CNCI,Pfam ---- Fetch novel mRNA class_code uj, orf, pep
-        #     OUTPUTDIR + "Step13.NovelmRNAIdentify/Candidate_Novel_mRNA.gtf",
-        #     OUTPUTDIR + "Step13.NovelmRNAIdentify/Candidate_Novel_mRNA.fa",
-        #     OUTPUTDIR + "Step13.NovelmRNAIdentify/Candidate_Novel_mRNA.orf_cds.fa",
-        #     OUTPUTDIR + "Step13.NovelmRNAIdentify/Candidate_Novel_mRNA.orf_pep.fa",
-        # ## Step 14: Novel mRNA identify by CPC2,CNCI,Pfam ---- Novel mRNA Protein Coding detection (CPC2,CNCI,PFAM)
-        #     OUTPUTDIR + "Step14.CPC2NovelmRNAProteinPrediction/NovelmRNA_CPC2_Out.txt",
-        #     OUTPUTDIR + "Step14.CPC2NovelmRNAProteinPrediction/NovelmRNA_CPC2_Coding.txt",
-        #     OUTPUTDIR + "Step14.CNCINovelmRNAProteinPrediction/NovelmRNA_CNCI/CNCI.index",
-        #     OUTPUTDIR + "Step14.CNCINovelmRNAProteinPrediction/NovelmRNA_CNCI_Coding.txt",
-        #     OUTPUTDIR + "Step14.PfamScanNovelmRNAPrediction/NovelmRNA_PfamScan.Result.txt",
-        #     OUTPUTDIR + "Step14.PfamScanNovelmRNAPrediction/NovelmRNA_PfamScan_Coding.txt",
-        ## Step 15: Cis and trans target gene
-        ## Step 16: Target by known miRNA
-        ## Step 17: 
-        ## Step 18: 
-        ## Step 19: 
+  ## -------------- Part 07 Final Analysis Report  ------------ ##
         ## Report S01: Fastq Filter Result
             # OUTPUTDIR + "Report/S01.FastqFilter.jsonlist.txt",
             # OUTPUTDIR + "Report/S01.FastqFilter-State.tsv"
