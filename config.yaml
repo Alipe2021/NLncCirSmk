@@ -22,12 +22,12 @@ genome_bwa_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/BwaIndex/geno
 pfamdb: /MaizeLab/auhpc1/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm
 pfamdt: /MaizeLab/auhpc1/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm.dat
 ## DEG Analysis needed
-compare_pairs:  /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/compare_pairs.txt
-sample_groups: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/sample_groups.txt
+compare_pairs: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/compare_pairs.txt
+sample_groups: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/sample_groups.txt
 ## Trinity needed
-TrinitySampleList: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/tinity_sample_list.txt
+TrinitySampleList: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/tinity_sample_list.txt
 ## CIRI2 needed
-ciri_quant_cfg: 
+ciri_quant_cfg: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/ciri_quant_cfg.yaml
 ### Path to a folder where intermediate files will be written.
 output_dir: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/output.v1/
 

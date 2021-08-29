@@ -2,7 +2,7 @@
 #
 from genericpath import exists
 import re, os, yaml, json, sys
-from typing_extensions import TypeVarTuple
+# from typing_extensions import TypeVarTuple
 from typing import runtime_checkable
 import pandas as pd
 #
@@ -60,6 +60,8 @@ BOWTIE2_DNA_INDEX = config["genome_bowtie2_index"]
 COMPARE_PAIRS = config['compare_pairs']         # comparation paris
 SAMPLE_GROUPS = config['sample_groups']         # sample group information
 #
+TINITY_SAMPLE_LIST = config["TrinitySampleList"]
+#
 ## ============================================================ ##
 #                    Start Steps for each Module                 #
 #                        2021-08-19 09:30                        #
@@ -96,21 +98,21 @@ rule all:
     input:
   ## -------------- Part 01 Data Preprocessing ---------------- ##
     # Step 00: Prepare data
-        expand( OUTPUTDIR + "Part01_Common_Analysis_00.DataPrepare/{sample}.R1.fq.gz", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_00.DataPrepare/{sample}.R2.fq.gz", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/00.DataPrepare/{sample}.R1.fq.gz", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/00.DataPrepare/{sample}.R2.fq.gz", sample=SAMPLES ),
     # Step 01: Quality Control
-        expand( OUTPUTDIR + "Part01_Common_Analysis_01.FastqFilter/{sample}/{sample}.R1.fq.gz", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_01.FastqFilter/{sample}/{sample}.R2.fq.gz", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_01.FastqFilter/{sample}/{sample}.json", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_01.FastqFilter/{sample}/{sample}.html", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/01.FastqFilter/{sample}/{sample}.R1.fq.gz", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/01.FastqFilter/{sample}/{sample}.R2.fq.gz", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/01.FastqFilter/{sample}/{sample}.json", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/01.FastqFilter/{sample}/{sample}.html", sample=SAMPLES ),
     # Step 02: Filter rRNA
-        expand( OUTPUTDIR + "Part01_Common_Analysis_02.FilterrRNA/{sample}.bam", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_02.FilterrRNA/{sample}/un-conc-mate.1", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_02.FilterrRNA/{sample}/un-conc-mate.2", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_02.FilterrRNA/{sample}/rRNA_filter.ok", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}.bam", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/un-conc-mate.1", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/un-conc-mate.2", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/rRNA_filter.ok", sample=SAMPLES ),
     # Step 03:  Rename bowtie2 output un-conc-mate
-        expand( OUTPUTDIR + "Part01_Common_Analysis_03.rRNAFreeFastq/{sample}.R1.fq.gz", sample=SAMPLES ),
-        expand( OUTPUTDIR + "Part01_Common_Analysis_03.rRNAFreeFastq/{sample}.R2.fq.gz", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/03.rRNAFreeFastq/{sample}.R1.fq.gz", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part01_Preprocess/03.rRNAFreeFastq/{sample}.R2.fq.gz", sample=SAMPLES ),
   ##
   ## -------------- Part 02 Mapping and Assembly -------------- ##
     # Step 01: Align to reference genome
@@ -177,8 +179,8 @@ rule all:
         OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.pep",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.gff3",
     # Step 05: Novel mRNA protein coding potential prodict by CPC2
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt",
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt",
+        # OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt",
+        # OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt",
     # Step 06: Novel mRNA protein coding potential prodict by CNCI
         OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI.index",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.txt",
@@ -309,7 +311,7 @@ rule Part01_Preprocess_02_FilterrRNA:
         -m 5G -o {output.bam} && echo Success > {output.stat}
         """
 # Step 03: Rename bowtie2 un-conc-gz
-rule Part01_Common_Analysis_03_RenameBowtieOut:
+rule Part01_Preprocess_03_RenameBowtieOut:
     input:
         stat = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/rRNA_filter.ok",
         R1   = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/un-conc-mate.1",
@@ -487,7 +489,7 @@ rule Part03_LncRNA_Identification_01_FetchCandidateLncRNAGtf:
 rule Part03_LncRNA_Identification_02_FetchCandidatelncRNAFas:
     input:
         dna = DNA,
-        gtf = OUTPUTDIR + "Part03_LncRNA_Identification/01.CandidateLncRNAGTF/GffCompared.ioux.gtf"
+        gtf = OUTPUTDIR + "Part03_LncRNA_Identification/01.CandidateLncRNAGtf/GffCompared.ioux.gtf"
     output:
         fna = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
         tmp = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.tmp",
@@ -700,12 +702,12 @@ rule Part04_NovelmRNA_Identification_04_TransDecoderLongOrfs:
         TransDecoder.LongOrfs {params.opt} -t {input.fna} --gene_trans_map {input.g2t} --output_dir {params.DIR} 2> {log}
         """
 # Step 05: Novel mRNA protein coding potential prodict by CPC2
-rule Part04_NovelmRNA_Identification_05_CodingPotential.CPC2:
+rule Part04_NovelmRNA_Identification_05_CodingPotential_CPC2:
     input:
         cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"
     output:
         cpc = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt"),
-        cod = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt"),
+        cod = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt")
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2Prediction.log"
     threads:
@@ -723,9 +725,12 @@ rule Part04_NovelmRNA_Identification_05_CodingPotential.CPC2:
         source activate cpc2_py2_env && \
         CPC2.py -i {cds} -o {cpc} 2> {log} && grep -w "noncoding" {cpc} | cut -f1 > {noc}
         """.format(fas = input.cds, log = log, cpc = output.cpc, noc = output.noc)
+
+        print(cmd)
         subprocess.call(cmd, shell = True)
+
 # Step 06: Novel mRNA protein coding potential prodict by CNCI
-rule Part04_NovelmRNA_Identification_06_CodingPotential.CNCI:
+rule Part04_NovelmRNA_Identification_06_CodingPotential_CNCI:
     input:
         cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"
     output:
@@ -745,7 +750,7 @@ rule Part04_NovelmRNA_Identification_06_CodingPotential.CNCI:
         grep -w "coding" {output.cnci} | cut -f1 > {output.cod}
         """
 # Step 07: Novel mRNA protein coding potential prodict by Pfam
-rule Part04_NovelmRNA_Identification_07_CodingPotential.Pfam:
+rule Part04_NovelmRNA_Identification_07_CodingPotential_Pfam:
     input:
         OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.pep"
     output:
@@ -968,7 +973,7 @@ rule Part06_CircRNA_Analysis_02_CICR2_Prediction:
 # Step 03: CircRNA Quantitation
 rule Part06_CircRNA_Analysis_03_CircRNA_Quantitation:
     input:
-        conf = CIRI_Quant_CFG,
+        conf = CIRI_QUANT_CFG,
         ciri = OUTPUTDIR + "Part06_CircRNA_Analysis/02.CIRI2_Prediction/{sample}.ciri",
         R1 = OUTPUTDIR + "Part01_Preprocess/03.rRNAFreeFastq/{sample}.R1.fq.gz",
         R2 = OUTPUTDIR + "Part01_Preprocess/03.rRNAFreeFastq/{sample}.R2.fq.gz"
