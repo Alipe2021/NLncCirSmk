@@ -379,7 +379,7 @@ rule Part02_MappingAndAssembly_03_TrinityAssembly:
         fa = OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.fasta",
         ok = OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.ok"
     log:
-        OUTPUTDIR + "logs/Part02_MappingAndAssembly/03.TrinityAssembly/TrinityAssembly.log"
+        OUTPUTDIR + "AllLogs/Part02_MappingAndAssembly/03.TrinityAssembly/TrinityAssembly.log"
     message:
         "Start De novo Assembly useing trinity!"
     resources:
