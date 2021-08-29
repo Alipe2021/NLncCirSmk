@@ -1,35 +1,36 @@
-# Path to an uncompressed FASTA file with all transcript sequences.
-bed: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_v4.44.bed
-dna: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_dna_v4.fa
-gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma.v4.44.gtf
-mrna_gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_mrna.v4.44.gtf
-lncrna_gtf: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_lncrna.v4.44.gtf
-cds: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_cds_v4.fa
-ncrna: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_ncrna_v4.fa
-dict: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_dna_v4.fa.dict
-rRNA: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/RNACentralv16_Plant_rRNA/PlantrRNA_RNACentralv16.fa
-pfamdb: /aucluster/auhpc1_data/pub/DATA/Pfam.33.1/Pfam-A/Pfam-A.hmm
-pfamdt: /aucluster/auhpc1_data/pub/DATA/Pfam.33.1/Pfam-A/Pfam-A.hmm.dat
-##
-transcript: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/zma_cdna_v4.fa
-
-## CPAT Need
-TraningCDS: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/Traningdata/zma_cds.2532.fa
-TraningLnc: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/Traningdata/zma_lncRNA.v4.44.fa
-## 
-rRNA_bowtie2_index: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/RNACentralv16_Plant_rRNA/PlantrRNA_RNACentralv16.fa
-genome_hisat2_index: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/hisat2Index/genome.fa
-splice_sites: /aucluster/auhpc1_data/pub/DATA/Zea_mays/B73v4/hisat2Index/zma_v4.44.ss
-
-# Path to a folder where intermediate files will be written.
-ResultDir: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/Result.v1/
-
-# Path to a YAML file with samples and their corresponding FASTQ files.
-SampleList: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/sample.yaml
-
-## GEG Analysis needed
+## fasta
+dna: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
+cds: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_cds_v4.fa
+cdna: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_cdna_v4.fa
+ncrna: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_ncrna_v4.fa
+rRNA: /MaizeLab/auhpc1/DataBase/RNAcentral/v16.rRNA/PlantrRNA_RNACentralv16.fa
+mirna: /MaizeLab/auhpc1/DataBase/miRBase/22.1/zma_mature.fa
+## annotation
+bed: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_v4.44.bed
+gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma.v4.44.gtf
+mrna_gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_mrna.v4.44.gtf
+lncrna_gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_lncrna.v4.44.gtf
+go: /MaizeLab/auhpc1/DataBase/GO/zma.go
+## index
+dict: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa.dict
+splice_sites: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/hisat2Index/zma_v4.44.ss
+rRNA_bowtie2_index: /MaizeLab/auhpc1/DataBase/RNAcentral/v16.rRNA/PlantrRNA_RNACentralv16.fa
+genome_bowtie2_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/Bowtie2Index/genome.fa
+genome_hisat2_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/hisat2Index/genome.fa
+genome_bwa_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/BwaIndex/genome.fa
+## db
+pfamdb: /MaizeLab/auhpc1/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm
+pfamdt: /MaizeLab/auhpc1/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm.dat
+## DEG Analysis needed
 compare_pairs:  /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/compare_pairs.txt
 sample_groups: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/sample_groups.txt
-
 ## Trinity needed
 TrinitySampleList: /aucluster/auhpc1_data/liupeng/Project/LncRNA.20200807/tinity_sample_list.txt
+## CIRI2 needed
+
+### Path to a folder where intermediate files will be written.
+output_dir: /MaizeLab/auhpc1/liupeng/02.Project/01.CircleRNA.20210508/output.v1/
+
+# Path to a YAML file with samples and their corresponding FASTQ files.
+sample_list: /MaizeLab/auhpc1/liupeng/02.Project/01.CircleRNA.20210508/sample.yaml
+
