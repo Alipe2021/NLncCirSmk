@@ -137,7 +137,7 @@ rule all:
         OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.stats",
         OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.tracking",
         OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.loci",
-        OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.ok"
+        OUTPUTDIR + "Part02_MappingAndAssembly/07.Compare2Ref/GffCompared.ok",
   ##
   ## -------------- Part 03 LncRNA Identification ------------- ##
     # Step 01: Fetch class code "i", "o", "x", and "u"
@@ -219,11 +219,11 @@ rule all:
   ##
   ## -------------- Part 06 CircRNA Identification ------------ ##
     # Step 01: Map to Genome with BWA-MEM
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis_01.BWA2Genome/{sample}.sam", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/01.BWA2Genome/{sample}.sam", sample=SAMPLES ),
     # Step 02: CircRNA identification with CIRI2
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis_02.CIRI2_Prediction/{sample}.ciri", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/02.CIRI2_Prediction/{sample}.ciri", sample=SAMPLES ),
     # Step 03: CircRNA quantitation with CIRIquant
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis_03.CircRNA_Quantitation/{sample}/{sample}.gtf", sample=SAMPLES ),
+        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/03.CircRNA_Quantitation/{sample}/{sample}.gtf", sample=SAMPLES ),
     # Step 04: Identify circRNA by find_circ -- 1.mapping
         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/04.Bowtie2ToGenome/{sample}.sorted.bam", sample=SAMPLES),
     # Step 05: Identify circRNA by find_circ -- 2.Fetch unmapped read with bowtie2
@@ -428,7 +428,7 @@ rule Part02_MappingAndAssembly_05_MakeMergeList:
 # Step 06: Merge transcript
 rule Part02_MappingAndAssembly_06_StringtieMerge:
     input:
-        lst = OUTPUTDIR + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt"
+        lst = OUTPUTDIR + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt",
         gtf = GTF
     output:
         gtf = OUTPUTDIR + "Part02_MappingAndAssembly/06.StringtieMerge/StringtieMerged.gtf"
@@ -589,7 +589,7 @@ rule Part03_LncRNA_Identification_06_FEELnc_filter:
 # Step 07: LncRNA Identification by FEElnc, S2: codpot predict
 rule Part03_LncRNA_Identification_07_FEELnc_codpot:
     input:
-        RefGtf = DNA,
+        RefFas = DNA,
         RefGtf = GTF,
         mRNAGtf   = MRNA_GTF,
         lncRNAGtf = LNCRNA_GTF,
@@ -614,7 +614,7 @@ rule Part03_LncRNA_Identification_07_FEELnc_codpot:
         """
         source activate feelnc_env && \
         FEELnc_codpot.pl {params.cod_opt1} {params.cod_opt2} -p {threads} -i {input.flt} -a {input.RefGtf} \
-            -g {input.RefGtf} -l {input.lncRNAGtf} --outdir={params.cod_dir} --outname={params.cod_name} 2> {log}
+            -g {input.RefFas} -l {input.lncRNAGtf} --outdir={params.cod_dir} --outname={params.cod_name} 2> {log}
         """
 # Step 08: LncRNA Identification by FEElnc, S3: classifier
 rule Part03_LncRNA_Identification_08_FEELnc_classifier:
@@ -795,7 +795,7 @@ rule Part04_NovelmRNA_Identification_09_CPATBuildHexamerTable:
     shell:
         """
         source activate cpat_env && \
-        make_hexamer_tab.py {params} -c {input.cds} -n {input.ncrna} > {output} 2> {log}
+        make_hexamer_tab.py {params} -c {input.cds} -n {input.noc} > {output} 2> {log}
         """
 # Step 10: Novel mRNA protein coding potential prodict by CPAT-Build Logit Model
 rule Part04_NovelmRNA_Identification_10_CPATBuildLogitModel:
@@ -990,7 +990,7 @@ rule Part06_CircRNA_Analysis_03_CircRNA_Quantitation:
     shell:
         """
         source activate CIRIquant_env && \
-        CIRIquant --config {input.cfg} {params.opt} -1 {input.R1} -2 {input.R2} -o {params.dir} \
+        CIRIquant --config {input.conf} {params.opt} -1 {input.R1} -2 {input.R2} -o {params.dir} \
             -p {params.perfix} -t {threads} --circ {input.ciri} -e {log}
         """
 # Step 04: Identify circRNA by find_circ -- 1.mapping
