@@ -124,8 +124,8 @@ rule all:
         expand( OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R1.fq.gz", sample=SAMPLES ),
         expand( OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R2.fq.gz", sample=SAMPLES ),
     # Step 03: Trinity Assembly
-        OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.fasta",
-        OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.ok",
+        # OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.fasta",
+        # OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.ok",
     # Step 04: Stringtie Assembly
         expand( OUTPUTDIR + "Part02_MappingAndAssembly/04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
     # Step 05: Make gtf List
@@ -388,13 +388,11 @@ rule Part02_MappingAndAssembly_03_TrinityAssembly:
         20
     params:
         opt = "--seqType fq --max_memory 100G --full_cleanup",
-        outdir = OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/"
+        dir = OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/"
     shell:
         """
-        source activate tinity_env && \
-        Trinity {params.opt} --samples_file {input.samList} --CPU {threads} --output {params.outdir} && \
-        if [[ -s {output.fa} ]]; then echo SUCCESS ! > {output.ok}; fi && \
-        conda deactivate
+        source activate trinity_env && \
+        Trinity {params.opt} --samples_file {input.samList} --CPU {threads} --output {params.odir}
         """
 # Step 04: Stringtie Assembly
 rule Part02_MappingAndAssembly_04_StringtieAssembly:
