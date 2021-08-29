@@ -54,6 +54,7 @@ PFAMDB = os.path.dirname(config["pfamdb"]) # PFAM database, need for Protein Pre
 # Specifically Needed for CircRNA Identification and Quantification
 BWA_DNA_INDEX   = config["genome_bwa_index"]    # bwa index for genome mapping, need for CIRI2
 CIRI_QUANT_CFG  = config["ciri_quant_cfg"]      # yaml format config file for CIRIquant
+BOWTIE2_DNA_INDEX = config["genome_bowtie2_index"]
 #
 # DEGs Analysis Needed
 COMPARE_PAIRS = config['compare_pairs']         # comparation paris
