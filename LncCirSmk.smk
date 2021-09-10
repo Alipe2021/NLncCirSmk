@@ -144,11 +144,11 @@ rule all:
         OUTPUTDIR + "Part03_LncRNA_Identification/01.CandidateLncRNAGtf/GffCompared.ioux.gtf",
     # Step 02: Fetch Candidate lncRNA fasta
         OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
-        OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.tmp",
         OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.pep.fa",
     # Step 03: lncRNA protein coding potential prodiction with CPC2
         OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2PredictOut.txt",
         OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2_Noncoding.txt",
+        OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2_Noncoding.ok",
     # Step 04: LncRNA protein coding potential prediction with CNCI
         OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict/CNCI.index",
         OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.txt",
@@ -179,8 +179,9 @@ rule all:
         OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.pep",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.gff3",
     # Step 05: Novel mRNA protein coding potential prodict by CPC2
-        # OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt",
-        # OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.ok",
     # Step 06: Novel mRNA protein coding potential prodict by CNCI
         OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI.index",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.txt",
@@ -206,8 +207,8 @@ rule all:
   ## -------------- Part 05 Expression Analysis --------------- ##
     # Step 01: Re Assembly by Stringtie
         expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.gtf", sample = SAMPLES),
-        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssembly/{sample}.coverage.cov", sample = SAMPLES),
-        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssembly/{sample}.GeneAbund.txt", sample = SAMPLES),
+        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.coverage.cov", sample = SAMPLES),
+        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.GeneAbund.txt", sample = SAMPLES),
     # Step 02: Get assembled gtf list
         OUTPUTDIR + "Part05_Expression_Analysis/02.GetAssembledGtfList/AssembledGtfList.txt",
     # Step 03: Get gene and transcripts count matrix
@@ -291,7 +292,7 @@ rule Part01_Preprocess_02_FilterrRNA:
         R2 = OUTPUTDIR + "Part01_Preprocess/01.FastqFilter/{sample}/{sample}.R2.fq.gz",
         idx = BOWTIE2_rRNA_INDEX
     output:
-        bam  = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}.bam",
+        bam  = temp(OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}.bam"),
         stat = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/rRNA_filter.ok",
         R1   = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/un-conc-mate.1",
         R2   = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/un-conc-mate.2"
@@ -392,7 +393,7 @@ rule Part02_MappingAndAssembly_03_TrinityAssembly:
     shell:
         """
         source activate trinity_env && \
-        Trinity {params.opt} --samples_file {input.samList} --CPU {threads} --output {params.odir}
+        Trinity {params.opt} --samples_file {input.samList} --CPU {threads} --output {params.dir}
         """
 # Step 04: Stringtie Assembly
 rule Part02_MappingAndAssembly_04_StringtieAssembly:
@@ -418,14 +419,27 @@ rule Part02_MappingAndAssembly_05_MakeMergeList:
     input:
         expand(OUTPUTDIR + "Part02_MappingAndAssembly/04.StringtieAssembly/{sample}.gtf", sample = SAMPLES)
     output:
-        OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt"
+        lst = OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt",
+        ok = OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.ok",
+    params:
+        dir = OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/"
     run:
+        import os
+        import subprocess
+
+        if not os.path.exists(params.dir):
+            os.makedirs(params.dir)
+
         with open(output, 'w') as f:
             for gtf in input:
                 print(gtf, file=f)
+
+        if os.path.getsize(output.lst) > 0:
+            subprocess.call("echo Success > {o}".format(o=output.ok), shell=True)        
 # Step 06: Merge transcript
 rule Part02_MappingAndAssembly_06_StringtieMerge:
     input:
+        ok = OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.ok",
         lst = OUTPUTDIR + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt",
         gtf = GTF
     output:
@@ -490,7 +504,7 @@ rule Part03_LncRNA_Identification_02_FetchCandidatelncRNAFas:
         gtf = OUTPUTDIR + "Part03_LncRNA_Identification/01.CandidateLncRNAGtf/GffCompared.ioux.gtf"
     output:
         fna = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
-        tmp = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.tmp",
+        tmp = temp(OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.tmp"),
         pep = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.pep.fa"
     log:
         OUTPUTDIR + "AllLogs/Part03_LncRNA_Identification/02.CandidatelncRNAFas/Candaidate_lncRNA_fa_fetch.log"
@@ -507,46 +521,60 @@ rule Part03_LncRNA_Identification_03_CPC2_Predict:
         fas = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
     output:
         cpc = protected(OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2PredictOut.txt"),
-        noc = protected(OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2_Noncoding.txt")
+        noc = protected(OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2_Noncoding.txt"),
+        ok = OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2_Noncoding.ok",
     log:
         OUTPUTDIR + "AllLogs/Part03_LncRNA_Identification/03.CPC2_Predict/CPC2Predict.log"
     threads:
         1
     params:
-        dir = OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/"
+        dir = OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/",
+        pfx = OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2PredictOut",
     run:
         import os
         import subprocess
         if not os.path.exists(params.dir):
             os.makedirs(params.dir)
+
         cmd = """
-        source activate cpc2_py2_env && \
-        CPC2.py -i {fas} -o {cpc} 2> {log} && grep -w "noncoding" {cpc} | cut -f1 > {noc}
-        """.format(fas = input.fas, log = log, cpc = output.cpc, noc = output.noc)
+        source activate cpc2_py3_env && \
+        CPC2.py -i {fas} -o {pfx} 2> {lo} && grep -w "noncoding" {cpc} | cut -f1 > {noc}
+        """.format(fas=input.fas, lo=log, pfx=params.pfx, cpc=output.cpc, noc=output.noc)
+        
+        print(cmd)
         subprocess.call(cmd, shell = True)
-        # sz = os.path.getsize(output.noc)
-        # if sz > 0:
-        #     subprocess.call("echo SUCCESS > {ok}".format(ok = output.ok), shell = True)
+
+        sz = os.path.getsize(output.noc)
+        if sz > 0:
+            subprocess.call("echo SUCCESS > {ok}".format(ok=output.ok), shell = True)
 # Step 04: LncRNA protein coding potential prediction with CNCI
 rule Part03_LncRNA_Identification_04_CNCI_Predict:
     input:
-        OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
+        fas = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
     output:
         cnci = protected(OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict/CNCI.index"),
-        noc  = OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.txt"
+        noc  = protected(OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.txt"),
     log:
         OUTPUTDIR + "AllLogs/Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict.log"
     threads:
-        20
+        10
     params:
         opt = "-m ve",
-        out = OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict"
-    shell:
-        """
-        source activate cnci_py2_env && \
-        CNCI.py -f {input} -o {params.out} -p {threads} {params.opt} 2> {log} && \
-        grep -w "noncoding" {output.cnci} | cut -f1 > {output.noc}
-        """
+        dir = OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict",
+    run:
+        import os
+        import subprocess
+
+        if not os.path.exists(params.dir):
+            os.makedirs(params.dir)
+       
+        cmd = """
+        source activate cnci_py2_env && CNCI.py -f {f} -o {out} -p {p} {opt} 2> {lo} && grep -w "noncoding" {cnci} | cut -f1 > {noc}
+        """.format(f=input.fas, out=params.dir, p=threads, opt=params.opt, lo=log, cnci=output.cnci, noc=output.noc)
+
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+
 # Step 05: LncRNA protein coding potential prediction with PfamScan
 rule Part03_LncRNA_Identification_05_Pfam_Predict:
     input:
@@ -705,13 +733,14 @@ rule Part04_NovelmRNA_Identification_05_CodingPotential_CPC2:
         cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"
     output:
         cpc = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt"),
-        cod = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt")
+        cod = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt"),
+        ok = OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.ok"
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2Prediction.log"
     threads:
         1
     params:
-        DIR = OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/",
+        dir = OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/",
         pfx = OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut"
     run:
         import os
@@ -720,13 +749,16 @@ rule Part04_NovelmRNA_Identification_05_CodingPotential_CPC2:
             os.makedirs(params.dir)
         
         cmd = """
-        source activate cpc2_py2_env && \
-        CPC2.py -i {cds} -o {cpc} 2> {log} && grep -w "noncoding" {cpc} | cut -f1 > {noc}
-        """.format(fas = input.cds, log = log, cpc = output.cpc, noc = output.noc)
+        source activate cpc2_py3_env && \
+        CPC2.py -i {cds} -o {pfx} 2> {lo} && grep -w "noncoding" {cpc} | cut -f1 > {cod}
+        """.format(fas=input.cds, pfx=params.pfx, lo=log, cpc=output.cpc, cod=output.cod)
 
         print(cmd)
         subprocess.call(cmd, shell = True)
 
+        sz = os.path.getsize(output.cod)
+        if sz > 0:
+            subprocess.call("echo SUCCESS > {ok}".format(ok=output.ok), shell = True)
 # Step 06: Novel mRNA protein coding potential prodict by CNCI
 rule Part04_NovelmRNA_Identification_06_CodingPotential_CNCI:
     input:
@@ -851,19 +883,19 @@ rule Part05_Expression_Analysis_01_ReStringtieAssemble:
         gtf = OUTPUTDIR + "Part02_MappingAndAssembly/06.StringtieMerge/StringtieMerged.gtf"
     output:
         gtf = OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.gtf",
-        cov = OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssembly/{sample}.coverage.cov",
-        abu = OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssembly/{sample}.GeneAbund.txt"
+        cov = OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.coverage.cov",
+        abu = OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.GeneAbund.txt"
     message:
         "Start to assembly use stringtie."
     log:
-        OUTPUTDIR + "AllLogs/Part05_Expression_Analysis/01.ReStringtieAssembly/{sample}.assembly.logs"
+        OUTPUTDIR + "AllLogs/Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.assembly.logs"
     priority:
         50
     threads:
         8
     params:
         opt = "-m 200 -l STRG -a 10 -c 1 -e",
-        bal = OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssembly/Ballgown/{sample}"
+        bal = OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/Ballgown/{sample}"
     shell:
         """
         stringtie {input.bam} -G {input.gtf} -o {output.gtf} -p {threads} {params.opt} \
@@ -965,7 +997,8 @@ rule Part06_CircRNA_Analysis_02_CICR2_Prediction:
         8    
     shell:
         """
-        perl /opt/biosoft/CIRI2/CIRI2.pl {params} -T {threads} -I {input.sam} \
+        source activate ciri_py2_env && \
+        CIRI2.pl {params} -T {threads} -I {input.sam} \
         -O {output.ciri} -F {input.ref} -A {input.gtf} --log {log} 
         """        
 # Step 03: CircRNA Quantitation
@@ -981,13 +1014,13 @@ rule Part06_CircRNA_Analysis_03_CircRNA_Quantitation:
         OUTPUTDIR + "AllLogs/Part06_CircRNA_Analysis/03.CircRNA_Quantitation/{sample}.CIRIquant.log"
     params:
         opt = "--tool CIRI2",
-        dir = OUTPUTDIR + "Part06_CircRNA_Analysis_03.CircRNA_Quantitation/{sample}",
+        dir = OUTPUTDIR + "Part06_CircRNA_Analysis/03.CircRNA_Quantitation/{sample}",
         perfix = "{sample}",
     threads:
         8
     shell:
         """
-        source activate CIRIquant_env && \
+        source activate ciri_py2_env && \
         CIRIquant --config {input.conf} {params.opt} -1 {input.R1} -2 {input.R2} -o {params.dir} \
             -p {params.perfix} -t {threads} --circ {input.ciri} -e {log}
         """
@@ -1016,17 +1049,20 @@ rule Part06_CircRNA_Analysis_05_FetchUnmappedBam:
     input:
         bam = OUTPUTDIR + "Part06_CircRNA_Analysis/04.Bowtie2ToGenome/{sample}.sorted.bam"
     output:
-        bam = OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bam"
+        bam = OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bam",
+        bai = OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bai",
     threads:
         4        
     shell:
         """
-        samtools view -hf4 -@ {threads} {input.bam} | samtools view -@ {threads} -Sb - > {output.bam}
+        samtools view -hf4 -@ {threads} {input.bam} | samtools view -@ {threads} -Sb - > {output.bam} && \
+        samtools index -b -@ {threads} {output.bam} {output.bai}
         """
 # Step 06: Identify circRNA by find_circ -- 3.Convert bam to qfa
 rule Part06_CircRNA_Analysis_06_Bam2Anchors:
     input:
-        bam = OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bam"
+        bam = OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bam",
+        bai = OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bai"
     output:
         fq = OUTPUTDIR + "Part06_CircRNA_Analysis/06.Bam2Anchors/{sample}/unmapped_anchors.fq.gz"
     params:
@@ -1089,14 +1125,23 @@ rule Part06_CircRNA_Analysis_09_FetchFinalCircRNA:
         OUTPUTDIR + "Part06_CircRNA_Analysis/08.MergeAllSamplesBed/merged_spliced_reads.bed"
     output:
         OUTPUTDIR + "Part06_CircRNA_Analysis/09.FinalCircRNA/circ_candidates.bed"
+    threads:
+        1
+    params:
+        DIR = OUTPUTDIR + "Part06_CircRNA_Analysis/09.FinalCircRNA/"
     run:
+        import os
         import subprocess
-        cmd = ("source activate find_circ_env && grep CIRCULAR {i} | awk '$5>=2' "
+
+        if not os.path.exists(params.DIR):
+            os.makedirs(params.DIR)
+
+        cmd = ("source activate find_circ_env && grep CIRCULAR {i} | awk '$5>=2' | "
                 "grep UNAMBIGUOUS_BP | grep ANCHOR_UNIQUE | maxlength.py 100000 > {o}"
                 ).format(i=input, o=output)
         
         print(cmd)
-        subprocess.call(cmd)
+        subprocess.call(cmd, shell=True)
 #
 ##################################################################
 ## ================ Part 07 Final Analysis Report ============= ##
