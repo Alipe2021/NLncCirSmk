@@ -250,6 +250,7 @@ reference:
 ## Run pipeline
 
 ```sh
+source activate LncCirSmk
 snakemake -p -s LncCir.smk -j <threads> --latency-wait 20 
 ```
 
