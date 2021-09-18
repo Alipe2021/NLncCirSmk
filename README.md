@@ -89,17 +89,20 @@ pip install CIRIquant
 ## CIRI2
 wget -c https://sourceforge.net/projects/ciri/files/CIRI2/CIRI_v2.0.6.zip
 unzip CIRI_v2.0.6.zip
-cp CIRI_v2.0.6/CIRI2.pl /opt/miniconda3/envs/ciri_py2_env/bin/CIRI2.pl
-# add "#!/usr/bin/perl -w" at the head of CIRI2.pl
-chmod 755 /opt/miniconda3/envs/ciri_py2_env/bin/CIRI2.pl	
 ## CIRI_AS
 wget -c https://pilotfiber.dl.sourceforge.net/project/ciri/CIRI-AS/CIRI_AS_v1.2.pl -O /opt/miniconda3/envs/ciri_py2_env/bin/CIRI_AS.pl
-# add "#!/usr/bin/perl -w" at the head of CIRI_AS.pl
-chmod 755 /opt/miniconda3/envs/ciri_py2_env/bin/CIRI_AS.pl
 ## CIRI_Vis
 wget -c https://phoenixnap.dl.sourceforge.net/project/ciri/CIRI-vis/CIRI-vis_v1.4.jar -O /opt/miniconda3/envs/ciri_py2_env/bin/CIRI-vis.jar
 ## CIRI_Full
-wget -c https://sourceforge.net/projects/ciri/files/CIRI-full/CIRI_Full_v2.1.1.jar/download -O /opt/miniconda3/envs/ciri_py2_env/bin/CIRI_Full.jar
+wget -c https://sourceforge.net/projects/ciri/files/CIRI-full/CIRI-full_v2.0.zip
+wget -c https://sourceforge.net/projects/ciri/files/CIRI-full/CIRI_Full_v2.1.1.jar/download -O CIRI_Full.jar
+
+# CIRCexplorer2
+conda create -n circexplorer2_py2_env -c bioconda -c conda-forge python=2.7 circexplorer2
+conda install -n circexplorer2_py2_env -c bioconda  bwa star samtools bedtools 
+conda install -n circexplorer2_py2_env -c conda-forge pysam pybedtools pandas docopt scipy
+conda install -n circexplorer2_py2_env -c bioconda ucsc-genepredtogtf ucsc-gtftogenepred 
+conda install -n circexplorer2_py2_env -c bioconda ucsc-bedgraphtobigwig ucsc-bedtobigbed
 ```
 
 

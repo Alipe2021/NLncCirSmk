@@ -130,6 +130,7 @@ rule all:
         expand( OUTPUTDIR + "Part02_MappingAndAssembly/04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
     # Step 05: Make gtf List
         OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt",
+        OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.ok",
     # Step 06: Merge transcript
         OUTPUTDIR + "Part02_MappingAndAssembly/06.StringtieMerge/StringtieMerged.gtf",
     # Step 07: Compare to reference annotation
@@ -292,7 +293,7 @@ rule Part01_Preprocess_02_FilterrRNA:
         R2 = OUTPUTDIR + "Part01_Preprocess/01.FastqFilter/{sample}/{sample}.R2.fq.gz",
         idx = BOWTIE2_rRNA_INDEX
     output:
-        bam  = temp(OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}.bam"),
+        bam  = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}.bam",
         stat = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/rRNA_filter.ok",
         R1   = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/un-conc-mate.1",
         R2   = OUTPUTDIR + "Part01_Preprocess/02.FilterrRNA/{sample}/un-conc-mate.2"
@@ -430,7 +431,7 @@ rule Part02_MappingAndAssembly_05_MakeMergeList:
         if not os.path.exists(params.dir):
             os.makedirs(params.dir)
 
-        with open(output, 'w') as f:
+        with open(output.lst, 'w') as f:
             for gtf in input:
                 print(gtf, file=f)
 
@@ -504,7 +505,7 @@ rule Part03_LncRNA_Identification_02_FetchCandidatelncRNAFas:
         gtf = OUTPUTDIR + "Part03_LncRNA_Identification/01.CandidateLncRNAGtf/GffCompared.ioux.gtf"
     output:
         fna = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
-        tmp = temp(OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.tmp"),
+        tmp = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.tmp",
         pep = OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.pep.fa"
     log:
         OUTPUTDIR + "AllLogs/Part03_LncRNA_Identification/02.CandidatelncRNAFas/Candaidate_lncRNA_fa_fetch.log"
@@ -592,7 +593,7 @@ rule Part03_LncRNA_Identification_05_Pfam_Predict:
         """
         source activate pfam_scan_env && \
         pfam_scan.pl -cpu {threads} -fasta {input} -dir {params.db} -outfile {output.res} 2> {log} && \
-        grep -v "#" {output.res} |cut -f1 > {output.cod}
+        grep -v "#" {output.res} |cut -d' ' -f1 > {output.cod}
         """
 # Step 06: LncRNA Identification by FEElnc, S1: filter
 rule Part03_LncRNA_Identification_06_FEELnc_filter:
@@ -715,21 +716,33 @@ rule Part04_NovelmRNA_Identification_04_TransDecoderLongOrfs:
     output:
         cds = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"),
         pep = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.pep"),
-        gff = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.gff3")
+        gff = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.gff3"),
+        ok = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok"
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/TransdecoderORF_Fetch.log"
     threads:
         1
     params:
         opt = "-m 100 -S",
-        DIR = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/"
-    shell:
-        """
-        TransDecoder.LongOrfs {params.opt} -t {input.fna} --gene_trans_map {input.g2t} --output_dir {params.DIR} 2> {log}
-        """
+        dir = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/"
+    run:
+        import os
+        import subprocess
+
+        cmd = """
+        TransDecoder.LongOrfs {opt} -t {fna} --gene_trans_map {g2t} --output_dir {dir} 2> {log}
+        """.format(opt=params.opt, fna=input.fna, g2t=input.g2t, dir=params.dir, log=log)
+
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+
+        if os.path.getsize(output.cds) > 0:
+            subprocess.call("echo SUCCESS > {ok}".format(ok=output.ok), shell=True)
+
 # Step 05: Novel mRNA protein coding potential prodict by CPC2
 rule Part04_NovelmRNA_Identification_05_CodingPotential_CPC2:
     input:
+        ok = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok",
         cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"
     output:
         cpc = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt"),
@@ -796,7 +809,7 @@ rule Part04_NovelmRNA_Identification_07_CodingPotential_Pfam:
         """
         source activate pfam_scan_env && \
         pfam_scan.pl -cpu {threads} -fasta {input} -dir {params.db} -outfile {output.res} 2> {log} && \
-        grep -v "#" {input} |cut -f1 > {output.cod}
+        grep -v "#" {output.res} |cut -d' ' -f1 > {output.cod}
         """
 # Step 08: Random fetch fas for CPAT
 rule Part04_NovelmRNA_Identification_08_RandomFetchFas:
