@@ -906,10 +906,10 @@ rule Part04_NovelmRNA_Identification_08_RandomFetchFas:
 # Step 09: Novel mRNA protein coding potential prodict by CPAT-BuildHexamerTable
 rule Part04_NovelmRNA_Identification_09_CPATBuildHexamerTable:
     input:
-        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_CDS.fa",
+        cod = OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_CDS.fa",
         noc = OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_Noc.fa",
     output:
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/Maize_Hexamer.tsv"
+        tsv = OUTPUTDIR + "Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/Maize_Hexamer.tsv"
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/CPATBuildHexamerTable.log"
     threads:
