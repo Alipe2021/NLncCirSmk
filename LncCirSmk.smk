@@ -604,7 +604,7 @@ rule Part03_LncRNA_Identification_05_Pfam_Predict:
         OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.pep.fa",
     output:
         res = protected(OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/PfamPredictOut.txt"),
-        cod = protected(OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/Pfam_Coding.txt")
+        cod = protected(OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/Pfam_Coding.txt"),
     log:
         OUTPUTDIR + "AllLogs/Part03_LncRNA_Identification/05.Pfam_Predict/PfamPredict.log"
     threads:
@@ -684,6 +684,26 @@ rule Part03_LncRNA_Identification_08_FEELnc_classifier:
         source activate feelnc_env && \
         FEELnc_classifier.pl -i {input.CodGtf} -a {input.RefGtf} > {output} -l {log}
         """
+#
+# Step 09: Fetch Final identified lncRNAs
+rule Part03_LncRNA_Identification_09_FinalCantidatelncRNAs:
+    input:
+        cpc2 = OUTPUTDIR + "Part03_LncRNA_Identification/03.CPC2_Predict/CPC2_Noncoding.txt",
+        cnci = OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.txt",
+        pfam = OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/Pfam_Coding.txt",
+        feel = OUTPUTDIR + "Part03_LncRNA_Identification/08.FEELnc_classifier/Feelnc_Noncoding.txt"
+    output:
+    threads:
+        1
+    run:
+        import os
+        import subprocess
+        cmd = """
+        cat {c} {n} {p} {f} | sort |uniq -c |awk "$1==4 {print $2}" > {o}
+        """.format(c=input.cpc2, n=input.cnci, p=input.pfam, f=input.feel, o=output.lst)
+
+        print(cmd)
+        subprocess.call(cmd, shell=True)
 #
 ##################################################################
 ## ================ Part 04 Novel mRNA Identification ========= ##
