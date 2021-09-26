@@ -1,19 +1,15 @@
 #!/usr/bin/env python
+
+"""
+    Title:  Snakemake File for LncRNA, Novel mRNA, and Circular RNA Analysis
+   Author:  Liu Peng
+   E-mail:  sxliulian2012@hotmail.com
+  Version:  1.0
+     Date:  2021-05-08 16:31
+   Update:  2021-09-14 09:50
+"""
 #
-from genericpath import exists
 import re, os, yaml, json, sys
-# from typing_extensions import TypeVarTuple
-from typing import runtime_checkable
-import pandas as pd
-#
-"""
-    Title:      Snakemake File for LncRNA, Novel mRNA, and Circular RNA Analysis
-    Author:     Alipe
-    E-mail:     sxliulian2012@hotmail.com
-    Version:    1.0
-    Date:       2021-05-08 16:31
-    Update:     2021-08-16 11:37
-"""
 #
 # 1. Raw Reads --> Clean Reads --[filter rRNA]--> rRNA-free Reads
 # 2. rRNA-free Reads --[mapp to genome]--> Assembly --> Merged Info -
@@ -90,10 +86,11 @@ TINITY_SAMPLE_LIST = config["TrinitySampleList"]
 #                                                                #
 #         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~          #
 #                                                                #
-#                     佛祖保佑         永无BUG                    #
+#                     佛祖保佑         永无BUG                     #
 #                                                                #
 ##################################################################
-#
+#                                                                #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 rule all:
     input:
   ## -------------- Part 01 Data Preprocessing ---------------- ##
@@ -123,14 +120,13 @@ rule all:
     # Step 02: ReName un-conc-gz
         expand( OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R1.fq.gz", sample=SAMPLES ),
         expand( OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R2.fq.gz", sample=SAMPLES ),
-    # Step 03: Trinity Assembly
-        # OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.fasta",
-        # OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.ok",
+    # # Step 03: Trinity Assembly
+    #     OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.fasta",
+    #     OUTPUTDIR + "Part02_MappingAndAssembly/03.TrinityAssembly/trinity_outdir.Trinity.ok",
     # Step 04: Stringtie Assembly
         expand( OUTPUTDIR + "Part02_MappingAndAssembly/04.StringtieAssembly/{sample}.gtf", sample=SAMPLES ),
     # Step 05: Make gtf List
         OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt",
-        OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.ok",
     # Step 06: Merge transcript
         OUTPUTDIR + "Part02_MappingAndAssembly/06.StringtieMerge/StringtieMerged.gtf",
     # Step 07: Compare to reference annotation
@@ -153,6 +149,7 @@ rule all:
     # Step 04: LncRNA protein coding potential prediction with CNCI
         OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict/CNCI.index",
         OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.txt",
+        OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.ok",
     # Step 05: LncRNA protein coding potential prediction with PfamScan
         OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/PfamPredictOut.txt",
         OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/Pfam_Coding.txt",
@@ -177,15 +174,17 @@ rule all:
         OUTPUTDIR + "Part04_NovelmRNA_Identification/03.Gene2Tanscript/GffCompared_ju.g2t.txt",
     # Step 04: Fetch Candidate Novel mRNA ORF
         OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.rm_NN.cds",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.pep",
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.gff3",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok",
     # Step 05: Novel mRNA protein coding potential prodict by CPC2
         OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.ok",
     # Step 06: Novel mRNA protein coding potential prodict by CNCI
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI.index",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Predict/CNCI.index",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.ok",
     # Step 07: Novel mRNA protein coding potential prodict by Pfam
         OUTPUTDIR + "Part04_NovelmRNA_Identification/07.CodingPotential_Pfam/PfamPredictOut.txt",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/07.CodingPotential_Pfam/Pfam_Coding.txt",
@@ -198,56 +197,57 @@ rule all:
         OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.feature.xls",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.logit.RData",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.make_logitModel.r",
-    # Step 11: Novel mRNA protein coding potential prodict by CPAT-Detect ORF
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_seqs.fa",
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.tsv",
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.best.tsv",
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.no_ORF.txt",
-        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.r",
-  ##
+    # # Step 11: Novel mRNA protein coding potential prodict by CPAT-Detect ORF
+    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_seqs.fa",
+    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.tsv",
+    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.best.tsv",
+    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.no_ORF.txt",
+    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.r",
+#   ##
   ## -------------- Part 05 Expression Analysis --------------- ##
-    # Step 01: Re Assembly by Stringtie
-        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.gtf", sample = SAMPLES),
-        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.coverage.cov", sample = SAMPLES),
-        expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.GeneAbund.txt", sample = SAMPLES),
-    # Step 02: Get assembled gtf list
-        OUTPUTDIR + "Part05_Expression_Analysis/02.GetAssembledGtfList/AssembledGtfList.txt",
-    # Step 03: Get gene and transcripts count matrix
-        OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/gene_count_matrix.csv",
-        OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/transcript_count_matrix.csv",
-        OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/transcript_tpm_matrix.tsv",
-    # Step 04: Different Expression Analysis by edgeR
-        OUTPUTDIR + "Part05_Expression_Analysis/04.DGEbyEdgeR2/DGEbyEdgeR2.Result.ok",    
+    # # Step 01: Re Assembly by Stringtie
+    #     expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.gtf", sample = SAMPLES),
+    #     expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.coverage.cov", sample = SAMPLES),
+    #     expand( OUTPUTDIR + "Part05_Expression_Analysis/01.ReStringtieAssemble/{sample}.GeneAbund.txt", sample = SAMPLES),
+    # # Step 02: Get assembled gtf list
+    #     OUTPUTDIR + "Part05_Expression_Analysis/02.GetAssembledGtfList/AssembledGtfList.txt",
+    # # Step 03: Get gene and transcripts count matrix
+    #     OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/gene_count_matrix.csv",
+    #     OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/transcript_count_matrix.csv",
+    #     OUTPUTDIR + "Part05_Expression_Analysis/03.GetCountAndTPMMatrix/transcript_tpm_matrix.tsv",
+    # # Step 04: Different Expression Analysis by edgeR
+    #     OUTPUTDIR + "Part05_Expression_Analysis/04.DGEbyEdgeR2/DGEbyEdgeR2.Result.ok",    
   ##
-  ## -------------- Part 06 CircRNA Identification ------------ ##
-    # Step 01: Map to Genome with BWA-MEM
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/01.BWA2Genome/{sample}.sam", sample=SAMPLES ),
-    # Step 02: CircRNA identification with CIRI2
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/02.CIRI2_Prediction/{sample}.ciri", sample=SAMPLES ),
-    # Step 03: CircRNA quantitation with CIRIquant
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/03.CircRNA_Quantitation/{sample}/{sample}.gtf", sample=SAMPLES ),
-    # Step 04: Identify circRNA by find_circ -- 1.mapping
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/04.Bowtie2ToGenome/{sample}.sorted.bam", sample=SAMPLES),
-    # Step 05: Identify circRNA by find_circ -- 2.Fetch unmapped read with bowtie2
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bam", sample=SAMPLES),
-    # Step 06: Identify circRNA by find_circ -- 3.Convert bam to qfa
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/06.Bam2Anchors/{sample}/unmapped_anchors.fq.gz", sample=SAMPLES),
-    # Step 07: Identify circRNA by find_circ -- 4.Find circRNA
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/spliced_reads.fa", sample = SAMPLES),
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/spliced_reads.bed", sample = SAMPLES),
-        expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/stat.txt", sample = SAMPLES),
-    # Step 08: Identify circRNA by find_circ -- 5.Merge all samples bed
-        OUTPUTDIR + "Part06_CircRNA_Analysis/08.MergeAllSamplesBed/merged_spliced_reads.bed",
-        OUTPUTDIR + "Part06_CircRNA_Analysis/08.MergeAllSamplesBed/merged_stat.txt",
-    # Step 09: Identify circRNA by find_circ -- 6.Fetch Good circRNA
-        OUTPUTDIR + "Part06_CircRNA_Analysis/09.FinalCircRNA/circ_candidates.bed", 
-
-  ## -------------- Part 07 Final Analysis Report  ------------ ##
-        ## Report S01: Fastq Filter Result
-            # OUTPUTDIR + "Report/S01.FastqFilter.jsonlist.txt",
-            # OUTPUTDIR + "Report/S01.FastqFilter-State.tsv"
-        ## Report S03: Read distribution by RseQC 3.0
-            # expand( OUTPUTDIR + "Report/S03.ReadDistribution/{sample}.state.tsv", sample=SAMPLES )
+#   ## -------------- Part 06 CircRNA Identification ------------ ##
+#     # Step 01: Map to Genome with BWA-MEM
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/01.BWA2Genome/{sample}.sam", sample=SAMPLES ),
+#     # Step 02: CircRNA identification with CIRI2
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/02.CIRI2_Prediction/{sample}.ciri", sample=SAMPLES ),
+#     # Step 03: CircRNA quantitation with CIRIquant
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/03.CircRNA_Quantitation/{sample}/{sample}.gtf", sample=SAMPLES ),
+#     # Step 04: Identify circRNA by find_circ -- 1.mapping
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/04.Bowtie2ToGenome/{sample}.sorted.bam", sample=SAMPLES),
+#     # Step 05: Identify circRNA by find_circ -- 2.Fetch unmapped read with bowtie2
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/05.UnmappedBam/{sample}.unmapped.bam", sample=SAMPLES),
+#     # Step 06: Identify circRNA by find_circ -- 3.Convert bam to qfa
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/06.Bam2Anchors/{sample}/unmapped_anchors.fq.gz", sample=SAMPLES),
+#     # Step 07: Identify circRNA by find_circ -- 4.Find circRNA
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/spliced_reads.fa", sample = SAMPLES),
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/spliced_reads.bed", sample = SAMPLES),
+#         expand( OUTPUTDIR + "Part06_CircRNA_Analysis/07.FindCircRNA/{sample}/stat.txt", sample = SAMPLES),
+#     # Step 08: Identify circRNA by find_circ -- 5.Merge all samples bed
+#         OUTPUTDIR + "Part06_CircRNA_Analysis/08.MergeAllSamplesBed/merged_spliced_reads.bed",
+#         OUTPUTDIR + "Part06_CircRNA_Analysis/08.MergeAllSamplesBed/merged_stat.txt",
+#     # Step 09: Identify circRNA by find_circ -- 6.Fetch Good circRNA
+#         OUTPUTDIR + "Part06_CircRNA_Analysis/09.FinalCircRNA/circ_candidates.bed", 
+#   ##
+#   ## -------------- Part 07 Final Analysis Report  ------------ ##
+#     # Report S01: Fastq Filter Result
+#         OUTPUTDIR + "Report/S01.FastqFilter.jsonlist.txt",
+#         OUTPUTDIR + "Report/S01.FastqFilter-State.tsv",
+#     # Report S03: Read distribution by RseQC 3.0
+#         expand( OUTPUTDIR + "Report/S03.ReadDistribution/{sample}.state.tsv", sample=SAMPLES ),
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #
 ##################################################################
 ## ================ Part 01 Data Preprocessing ================ ##
@@ -260,9 +260,13 @@ rule Part01_Preprocess_00_PrepareFastqFile:
     output:
        R1 =  OUTPUTDIR + "Part01_Preprocess/00.DataPrepare/{sample}.R1.fq.gz",
        R2 =  OUTPUTDIR + "Part01_Preprocess/00.DataPrepare/{sample}.R2.fq.gz"
+    threads:
+        1
     shell:
-        "ln -sf {input[0]} {output.R1} && "
-        "ln -sf {input[1]} {output.R2} "
+        """
+        ln -sf {input[0]} {output.R1} && ln -sf {input[1]} {output.R2}
+        """        
+#
 # Step 01: Quality Control
 rule Part01_Preprocess_01_FastqFilter:
     input:
@@ -286,6 +290,7 @@ rule Part01_Preprocess_01_FastqFilter:
         fastp {params} -w {threads} -i {input.R1} -I {input.R2} -o {output.R1} \
         -O {output.R2} -j {output.json} -h {output.html} 2> {log}
         """
+#
 # Step 02: rRNA filter
 rule Part01_Preprocess_02_FilterrRNA:
     input:
@@ -312,6 +317,7 @@ rule Part01_Preprocess_02_FilterrRNA:
         -1 {input.R1} -2 {input.R2} 2>{log} | samtools sort -n -O Bam -@ 4 \
         -m 5G -o {output.bam} && echo Success > {output.stat}
         """
+#
 # Step 03: Rename bowtie2 un-conc-gz
 rule Part01_Preprocess_03_RenameBowtieOut:
     input:
@@ -321,10 +327,11 @@ rule Part01_Preprocess_03_RenameBowtieOut:
     output:
         R1 = OUTPUTDIR + "Part01_Preprocess/03.rRNAFreeFastq/{sample}.R1.fq.gz",
         R2 = OUTPUTDIR + "Part01_Preprocess/03.rRNAFreeFastq/{sample}.R2.fq.gz"
+    threads:
+        1
     shell:
         """
-        ln -sf {input.R1} {output.R1} && \
-        ln -sf {input.R2} {output.R2}
+        ln -sf {input.R1} {output.R1} && ln -sf {input.R2} {output.R2}
         """
 #
 ##################################################################
@@ -360,6 +367,7 @@ rule Part02_MappingAndAssembly_01_Hisat2Genome:
             -1 {input.R1} -2 {input.R2} 2>{log} | samtools sort -O Bam \
             -@ {threads} -m 5G -o {output.BAM}
         """
+#
 # Step 02: ReName un-conc-gz
 rule Part02_MappingAndAssembly_02_ReNameHisat2Out:
     input:
@@ -368,11 +376,13 @@ rule Part02_MappingAndAssembly_02_ReNameHisat2Out:
     output:
         R1 = OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R1.fq.gz",
         R2 = OUTPUTDIR + "Part02_MappingAndAssembly/02.Hisat2Rename/{sample}.R2.fq.gz"
+    threads:
+        1
     shell:
         """
-        ln -sf {input.R1} {output.R1} && \
-        ln -sf {input.R2} {output.R2}
+        ln -sf {input.R1} {output.R1} && ln -sf {input.R2} {output.R2}
         """
+#
 # Step 03: Trinity Assembly
 rule Part02_MappingAndAssembly_03_TrinityAssembly:
     input:
@@ -396,6 +406,7 @@ rule Part02_MappingAndAssembly_03_TrinityAssembly:
         source activate trinity_env && \
         Trinity {params.opt} --samples_file {input.samList} --CPU {threads} --output {params.dir}
         """
+#
 # Step 04: Stringtie Assembly
 rule Part02_MappingAndAssembly_04_StringtieAssembly:
     input:
@@ -415,6 +426,7 @@ rule Part02_MappingAndAssembly_04_StringtieAssembly:
         """
         stringtie {input.bam} -G {input.gtf} -o {output.gtf} -p {threads} {params}
         """
+#
 # Step 05: Make gtf List
 rule Part02_MappingAndAssembly_05_MakeMergeList:
     input:
@@ -422,6 +434,8 @@ rule Part02_MappingAndAssembly_05_MakeMergeList:
     output:
         lst = OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.txt",
         ok = OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/MergedList.ok",
+    threads:
+        1
     params:
         dir = OUTPUTDIR  + "Part02_MappingAndAssembly/05.MakeGtfMergeList/"
     run:
@@ -436,7 +450,8 @@ rule Part02_MappingAndAssembly_05_MakeMergeList:
                 print(gtf, file=f)
 
         if os.path.getsize(output.lst) > 0:
-            subprocess.call("echo Success > {o}".format(o=output.ok), shell=True)        
+            subprocess.call("echo Success > {ok}".format(ok=output.ok), shell=True)        
+#
 # Step 06: Merge transcript
 rule Part02_MappingAndAssembly_06_StringtieMerge:
     input:
@@ -455,6 +470,7 @@ rule Part02_MappingAndAssembly_06_StringtieMerge:
         """
         stringtie --merge {params} -p {threads} -G {input.gtf} -o {output.gtf} {input.lst} 2> {log}
         """
+#
 # Step 07: Compare to reference annotation
 rule Part02_MappingAndAssembly_07_Compare2Ref:
     input:
@@ -498,6 +514,7 @@ rule Part03_LncRNA_Identification_01_FetchCandidateLncRNAGtf:
         """
         perl Scripts/Fetch.class_code_gtf.pl {input} {params} > {output}
         """
+#
 # Step 02: Fetch Candidate lncRNA fasta
 rule Part03_LncRNA_Identification_02_FetchCandidatelncRNAFas:
     input:
@@ -516,6 +533,7 @@ rule Part03_LncRNA_Identification_02_FetchCandidatelncRNAFas:
         gffread -w {output.fna} -g {input.dna} {input.gtf} && transeq {output.fna} \
         {output.tmp} && sed 's/*//g' {output.tmp} > {output.pep} 2> {log}
         """
+#
 # Step 03: lncRNA protein coding potential prodiction with CPC2
 rule Part03_LncRNA_Identification_03_CPC2_Predict:
     input:
@@ -545,9 +563,9 @@ rule Part03_LncRNA_Identification_03_CPC2_Predict:
         print(cmd)
         subprocess.call(cmd, shell = True)
 
-        sz = os.path.getsize(output.noc)
-        if sz > 0:
+        if os.path.getsize(output.noc) > 0:
             subprocess.call("echo SUCCESS > {ok}".format(ok=output.ok), shell = True)
+#
 # Step 04: LncRNA protein coding potential prediction with CNCI
 rule Part03_LncRNA_Identification_04_CNCI_Predict:
     input:
@@ -555,12 +573,13 @@ rule Part03_LncRNA_Identification_04_CNCI_Predict:
     output:
         cnci = protected(OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict/CNCI.index"),
         noc  = protected(OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.txt"),
+        ok   = OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Noncoding.ok",
     log:
         OUTPUTDIR + "AllLogs/Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict.log"
     threads:
         10
     params:
-        opt = "-m ve",
+        opt = "-m pl",
         dir = OUTPUTDIR + "Part03_LncRNA_Identification/04.CNCI_Predict/CNCI_Predict",
     run:
         import os
@@ -569,17 +588,20 @@ rule Part03_LncRNA_Identification_04_CNCI_Predict:
         if not os.path.exists(params.dir):
             os.makedirs(params.dir)
        
-        cmd = """
-        source activate cnci_py2_env && CNCI.py -f {f} -o {out} -p {p} {opt} 2> {lo} && grep -w "noncoding" {cnci} | cut -f1 > {noc}
-        """.format(f=input.fas, out=params.dir, p=threads, opt=params.opt, lo=log, cnci=output.cnci, noc=output.noc)
+        cmd = """source activate cnci_py2_env && CNCI.py -f {f} -o {out} -p {p} \
+        {opt} 2> {lo} && grep -w "noncoding" {cnci} | cut -f1 > {noc}
+        """.format(f=input.fas,out=params.dir, p=threads, opt=params.opt, lo=log, cnci=output.cnci, noc=output.noc)
 
         print(cmd)
         subprocess.call(cmd, shell=True)
 
+        if os.path.getsize(output.noc) > 0:
+            subprocess.call("echo SUCESS > {ok}".format(ok=output.ok), shell=True)
+#
 # Step 05: LncRNA protein coding potential prediction with PfamScan
 rule Part03_LncRNA_Identification_05_Pfam_Predict:
     input:
-        OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.fa",
+        OUTPUTDIR + "Part03_LncRNA_Identification/02.CandidatelncRNAFas/GffCompared.ioux.pep.fa",
     output:
         res = protected(OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/PfamPredictOut.txt"),
         cod = protected(OUTPUTDIR + "Part03_LncRNA_Identification/05.Pfam_Predict/Pfam_Coding.txt")
@@ -595,6 +617,7 @@ rule Part03_LncRNA_Identification_05_Pfam_Predict:
         pfam_scan.pl -cpu {threads} -fasta {input} -dir {params.db} -outfile {output.res} 2> {log} && \
         grep -v "#" {output.res} |cut -d' ' -f1 > {output.cod}
         """
+#
 # Step 06: LncRNA Identification by FEElnc, S1: filter
 rule Part03_LncRNA_Identification_06_FEELnc_filter:
     input:
@@ -613,6 +636,7 @@ rule Part03_LncRNA_Identification_06_FEELnc_filter:
         source activate feelnc_env && \
         FEELnc_filter.pl {params} -p {threads} -i {input.ComGtf} -a {input.RefGtf} -o {log} > {output.flt}
         """
+#
 # Step 07: LncRNA Identification by FEElnc, S2: codpot predict
 rule Part03_LncRNA_Identification_07_FEELnc_codpot:
     input:
@@ -643,6 +667,7 @@ rule Part03_LncRNA_Identification_07_FEELnc_codpot:
         FEELnc_codpot.pl {params.cod_opt1} {params.cod_opt2} -p {threads} -i {input.flt} -a {input.RefGtf} \
             -g {input.RefFas} -l {input.lncRNAGtf} --outdir={params.cod_dir} --outname={params.cod_name} 2> {log}
         """
+#
 # Step 08: LncRNA Identification by FEElnc, S3: classifier
 rule Part03_LncRNA_Identification_08_FEELnc_classifier:
     input:
@@ -681,6 +706,7 @@ rule Part04_NovelmRNA_Identification_01_FetchCandidateNovelmRNAGtf:
         """
         perl Scripts/Fetch.class_code_gtf.pl {input.gtf} {params} > {output} 2> {log}
         """      
+#
 # Step 02: Fetch Candidate Novel mRNA fasta
 rule Part04_NovelmRNA_Identification_02_FetchCandidateNovelmRNAFas:
     input:
@@ -696,6 +722,7 @@ rule Part04_NovelmRNA_Identification_02_FetchCandidateNovelmRNAFas:
         """
         gffread -w {output} -g {input.dna} {input.gtf} 2> {log}
         """
+#
 # Step 03: Fetch Gene<\t>Transcript table
 rule Part04_NovelmRNA_Identification_03_FetchGene2Tanscript:
     input:
@@ -708,6 +735,7 @@ rule Part04_NovelmRNA_Identification_03_FetchGene2Tanscript:
         """
         perl Scripts/Fetch.gene2transcript.pl {input} > {output}
         """
+#
 # Step 04: Fetch Candidate Novel mRNA ORF
 rule Part04_NovelmRNA_Identification_04_TransDecoderLongOrfs:
     input:
@@ -715,9 +743,10 @@ rule Part04_NovelmRNA_Identification_04_TransDecoderLongOrfs:
         g2t = OUTPUTDIR + "Part04_NovelmRNA_Identification/03.Gene2Tanscript/GffCompared_ju.g2t.txt"
     output:
         cds = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"),
+        fds = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.rm_NN.cds"),
         pep = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.pep"),
         gff = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.gff3"),
-        ok = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok"
+        ok = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok",
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/TransdecoderORF_Fetch.log"
     threads:
@@ -726,8 +755,9 @@ rule Part04_NovelmRNA_Identification_04_TransDecoderLongOrfs:
         opt = "-m 100 -S",
         dir = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/"
     run:
-        import os
+        import os,re
         import subprocess
+        from Bio import SeqIO
 
         cmd = """
         TransDecoder.LongOrfs {opt} -t {fna} --gene_trans_map {g2t} --output_dir {dir} 2> {log}
@@ -737,13 +767,23 @@ rule Part04_NovelmRNA_Identification_04_TransDecoderLongOrfs:
         subprocess.call(cmd, shell=True)
 
         if os.path.getsize(output.cds) > 0:
-            subprocess.call("echo SUCCESS > {ok}".format(ok=output.ok), shell=True)
+            records = SeqIO.parse(input.cds, "fasta")
+            filtered = (rec for rec in records if not re.search('N', str(rec.seq), re.IGNORECASE))
+            # SeqIO.write(filtered, output.fds, 'fasta')
+            # same to cut -d' ' -f1 
+            with open(output.fds, "w") as f:
+                for rec in filtered:
+                    out = ">" + str(rec.id) + "\n" + str(rec.seq)
+                    print(out, file=f)
 
+        if os.path.getsize(output.fds) > 0:
+            subprocess.call("echo SUCCESS >{ok}".format(ok=output.ok), shell=True)
+#     
 # Step 05: Novel mRNA protein coding potential prodict by CPC2
 rule Part04_NovelmRNA_Identification_05_CodingPotential_CPC2:
     input:
-        ok = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok",
-        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"
+        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.rm_NN.cds",
+        ok  = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok",
     output:
         cpc = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2PredictOut.txt"),
         cod = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt"),
@@ -763,8 +803,8 @@ rule Part04_NovelmRNA_Identification_05_CodingPotential_CPC2:
         
         cmd = """
         source activate cpc2_py3_env && \
-        CPC2.py -i {cds} -o {pfx} 2> {lo} && grep -w "noncoding" {cpc} | cut -f1 > {cod}
-        """.format(fas=input.cds, pfx=params.pfx, lo=log, cpc=output.cpc, cod=output.cod)
+        CPC2.py -i {cds} -o {pfx} 2> {lo} && grep -w "coding" {cpc} | cut -f1 > {cod}
+        """.format(cds=input.cds, pfx=params.pfx, lo=log, cpc=output.cpc, cod=output.cod)
 
         print(cmd)
         subprocess.call(cmd, shell = True)
@@ -772,26 +812,41 @@ rule Part04_NovelmRNA_Identification_05_CodingPotential_CPC2:
         sz = os.path.getsize(output.cod)
         if sz > 0:
             subprocess.call("echo SUCCESS > {ok}".format(ok=output.ok), shell = True)
+#
 # Step 06: Novel mRNA protein coding potential prodict by CNCI
 rule Part04_NovelmRNA_Identification_06_CodingPotential_CNCI:
     input:
-        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds"
+        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.rm_NN.cds",
+        ok  = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.ok",
     output:
-        cnci = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI.index"),
-        cod = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.txt")
+        cnci = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Predict/CNCI.index"),
+        cod = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.txt"),
+        ok = OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.ok",
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Prediction.log"
     threads:
         10
     params:
-        opt = "-m ve",
-        out = OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/"
-    shell:
-        """
-        source activate cnci_py2_env && \
-        CNCI.py -f {input} -o {params.out} -p {threads} {params.opt} 2> {log} && \
-        grep -w "coding" {output.cnci} | cut -f1 > {output.cod}
-        """
+        opt = "-m pl",
+        dir = OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Predict"
+    run:
+        import os
+        import subprocess
+
+        if not os.path.exists(params.dir):
+            os.makedirs(params.dir)
+
+        cmd = """source activate cnci_py2_env && CNCI.py -f {cds} -o {dir} \
+        -p {th} {opt} 2> {log} && grep -w "coding" {cnci} | cut -f1 > {cod}
+        """.format(cds=input.cds, dir=params.dir, th=threads, opt=params.opt, 
+        log=log, cnci=output.cnci, cod=output.cod)
+
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+
+        if os.path.getsize(output.cod) > 0:
+            subprocess.call("echo SUCCESS > {ok}".format(ok=output.ok), shell=True)
+#
 # Step 07: Novel mRNA protein coding potential prodict by Pfam
 rule Part04_NovelmRNA_Identification_07_CodingPotential_Pfam:
     input:
@@ -811,6 +866,7 @@ rule Part04_NovelmRNA_Identification_07_CodingPotential_Pfam:
         pfam_scan.pl -cpu {threads} -fasta {input} -dir {params.db} -outfile {output.res} 2> {log} && \
         grep -v "#" {output.res} |cut -d' ' -f1 > {output.cod}
         """
+#
 # Step 08: Random fetch fas for CPAT
 rule Part04_NovelmRNA_Identification_08_RandomFetchFas:
     input:
@@ -819,11 +875,14 @@ rule Part04_NovelmRNA_Identification_08_RandomFetchFas:
     output:
         cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_CDS.fa",
         noc = OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_Noc.fa",
+    threads:
+        1
     shell:
         """
         perl Scripts/RandomFetchFas.pl {input.cds} > {output.cds} && \
         perl Scripts/RandomFetchFas.pl {input.noc} > {output.noc}
         """    
+#
 # Step 09: Novel mRNA protein coding potential prodict by CPAT-BuildHexamerTable
 rule Part04_NovelmRNA_Identification_09_CPATBuildHexamerTable:
     input:
@@ -840,6 +899,7 @@ rule Part04_NovelmRNA_Identification_09_CPATBuildHexamerTable:
         source activate cpat_env && \
         make_hexamer_tab.py {params} -c {input.cds} -n {input.noc} > {output} 2> {log}
         """
+#
 # Step 10: Novel mRNA protein coding potential prodict by CPAT-Build Logit Model
 rule Part04_NovelmRNA_Identification_10_CPATBuildLogitModel:
     input:
@@ -860,10 +920,11 @@ rule Part04_NovelmRNA_Identification_10_CPATBuildLogitModel:
         source activate cpat_env && \
         make_logitModel.py {params.opt} -x {input.hex} -c {input.cod} -n {input.noc} -o {params.pfx} --log-file={log}
         """
+#
 # Step 11: Novel mRNA protein coding potential prodict by CPAT -- Detect ORF
 rule Part04_NovelmRNA_Identification_11_CPATtoDetectORF:
     input:
-        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.cds",
+        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.rm_NN.cds",
         hex = OUTPUTDIR + "Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/Maize_Hexamer.tsv",
         rdata = OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.logit.RData",
     output:
@@ -884,6 +945,28 @@ rule Part04_NovelmRNA_Identification_11_CPATtoDetectORF:
         source activate cpat_env && \
         cpat.py {params.opt} -x {input.hex} -d {input.rdata} -g {input.cds} -o {params.pfx} --log-file={log}
         """
+#
+# Step 12: Get Final Novel mRNAs
+rule Part04_NovelmRNA_Identification_12_FinalCandidatemRNAs:
+    input:
+        cpc2 = OUTPUTDIR + "Part04_NovelmRNA_Identification/05.CodingPotential_CPC2/CPC2_Coding.txt",
+        cnci = OUTPUTDIR + "Part04_NovelmRNA_Identification/06.CodingPotential_CNCI/CNCI_Coding.txt",
+        pfam = OUTPUTDIR + "Part04_NovelmRNA_Identification/07.CodingPotential_Pfam/Pfam_Coding.txt",
+        # cpat = ,
+    output:
+        lst = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/12.FinalCandidatemRNAs/Coding_mRNAs_list.txt"),
+    threads:
+        1
+    run:
+        import os
+        import subprocess
+
+        # cmd = """
+        # cat {c} {n} {p} {a}| sort |uniq -c | awk "$1==4 {print $2}" > {o}
+        # """.format(c=input.cpc2, n=input.cnci, p=input.pfam, a=input.cpat, o=output.lst)
+
+        # print(cmd)
+        # subprocess.call(cmd, shell=True)
 #
 ##################################################################
 ## ================ Part 05 Expression Analysis =============== ##
@@ -914,6 +997,7 @@ rule Part05_Expression_Analysis_01_ReStringtieAssemble:
         stringtie {input.bam} -G {input.gtf} -o {output.gtf} -p {threads} {params.opt} \
         -C {output.cov} -A {output.abu} -b {params.bal}
         """
+#
 # Step 02: Get assembled gtf list
 rule Part05_Expression_Analysis_02_GetAssembledGtfList:
     input:
@@ -928,6 +1012,7 @@ rule Part05_Expression_Analysis_02_GetAssembledGtfList:
                 sample = re.search(r'01\.ReStringtieAssemble/(.*).gtf', gtf).group(1)
                 outline = "\t".join((sample, gtf))
                 print(outline, file=f)
+#
 # Step 03: Get gene and transcripts count matrix
 rule Part05_Expression_Analysis_03_GetCountAndTPMMatrix:
     input:
@@ -946,6 +1031,7 @@ rule Part05_Expression_Analysis_03_GetCountAndTPMMatrix:
         prepDE.py -i {input} -g {output.gene} -t {output.mrna} {params} 2> {log.cnt} && \
         perl Scripts/GetTPMFromSringtieGtfList.pl {input} > {output.tran} 2> {log.tpm}
         """
+#
 # Step 04: Different Expression Analysis by edgeR
 rule Part05_Expression_Analysis_04_DGEbyEdgeR2:
     input:
@@ -994,6 +1080,7 @@ rule Part06_CircRNA_Analysis_01_BWA2Genome:
         """
         bwa mem {params} -o {output.sam} -t {threads} {input.idx} {input.R1} {input.R2} 2> {log}
         """
+#
 # Step 02: CircRNA identification with CIRI2
 rule Part06_CircRNA_Analysis_02_CICR2_Prediction:
     input:
@@ -1011,9 +1098,10 @@ rule Part06_CircRNA_Analysis_02_CICR2_Prediction:
     shell:
         """
         source activate ciri_py2_env && \
-        CIRI2.pl {params} -T {threads} -I {input.sam} \
+        perl /opt/biosoft/CIRI-full_v2.0/bin/CIRI_v2.0.6/CIRI2.pl {params} -T {threads} -I {input.sam} \
         -O {output.ciri} -F {input.ref} -A {input.gtf} --log {log} 
         """        
+#
 # Step 03: CircRNA Quantitation
 rule Part06_CircRNA_Analysis_03_CircRNA_Quantitation:
     input:
@@ -1037,6 +1125,7 @@ rule Part06_CircRNA_Analysis_03_CircRNA_Quantitation:
         CIRIquant --config {input.conf} {params.opt} -1 {input.R1} -2 {input.R2} -o {params.dir} \
             -p {params.perfix} -t {threads} --circ {input.ciri} -e {log}
         """
+#
 # Step 04: Identify circRNA by find_circ -- 1.mapping
 rule Part06_CircRNA_Analysis_04_Bowtie2ToGenome:
     input:
@@ -1057,6 +1146,7 @@ rule Part06_CircRNA_Analysis_04_Bowtie2ToGenome:
         bowtie2 {params.bwt} -p {threads} -x {input.idx} -1 {input.R1} -2 {input.R2} 2> {log} \
             | samtools view -hbuS - | samtools sort {params.sam} -o {output.bam}
         """
+#
 # Step 05: Identify circRNA by find_circ -- 2.Fetch unmapped read with bowtie2
 rule Part06_CircRNA_Analysis_05_FetchUnmappedBam:
     input:
@@ -1071,6 +1161,7 @@ rule Part06_CircRNA_Analysis_05_FetchUnmappedBam:
         samtools view -hf4 -@ {threads} {input.bam} | samtools view -@ {threads} -Sb - > {output.bam} && \
         samtools index -b -@ {threads} {output.bam} {output.bai}
         """
+#
 # Step 06: Identify circRNA by find_circ -- 3.Convert bam to qfa
 rule Part06_CircRNA_Analysis_06_Bam2Anchors:
     input:
@@ -1091,6 +1182,7 @@ rule Part06_CircRNA_Analysis_06_Bam2Anchors:
 
         print(cmd)
         subprocess.call(cmd, shell=True)
+#
 # Step 07: Identify circRNA by find_circ -- 4.Find circRNA
 rule Part06_CircRNA_Analysis_07_FindCircRNA:
     input:
@@ -1117,6 +1209,7 @@ rule Part06_CircRNA_Analysis_07_FindCircRNA:
 
         print(cmd)
         subprocess.call(cmd, shell=True)
+#
 # Step 08: Identify circRNA by find_circ -- 5.Merge all samples bed
 rule Part06_CircRNA_Analysis_08_MergeAllSamplesBed:
     input:
@@ -1127,11 +1220,12 @@ rule Part06_CircRNA_Analysis_08_MergeAllSamplesBed:
     run:
         import subprocess
 
-        cmd = ("source activate find_circ_env && merge_bed.py {i} -s {s} > {bed}"
-            ).format(i=input, s=output.stat, bed=output.bed)
+        cmd = ("source activate find_circ_env && merge_bed.py {i} -s {s} > {bed}").format(i=input, 
+        s=output.stat, bed=output.bed)
         
         print(cmd)
         subprocess.call(cmd, shell=True)
+#
 # Step 09: Identify circRNA by find_circ -- 6.Fetch Good circRNA
 rule Part06_CircRNA_Analysis_09_FetchFinalCircRNA:
     input:
@@ -1214,3 +1308,4 @@ rule Part06_CircRNA_Analysis_09_FetchFinalCircRNA:
     # ## -------- Report 10: Genome guid assembly Result --------
     # ## -------- Report 00: Output html report --------
 #
+
