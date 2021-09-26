@@ -914,11 +914,20 @@ rule Part04_NovelmRNA_Identification_09_CPATBuildHexamerTable:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/CPATBuildHexamerTable.log"
     threads:
         1
-    shell:
-        """
+    run:
+        import os
+        import subprocess
+
+        if not os.path.exists(os.path.dirname(output.tsv)):
+            os.makedirs(os.path.dirname(output.tsv))
+
+        cmd = """
         source activate cpat_env && \
-        make_hexamer_tab.py {params} -c {input.cds} -n {input.noc} > {output} 2> {log}
-        """
+        make_hexamer_tab.py -c {cod} -n {noc} > {tsv} 2> {log}
+        """.format(cod=input.cod, noc=input.noc, tsv=output.tsv, log=log)
+
+        print(cmd)
+        subprocess.call(cmd, shell=True)
 #
 # Step 10: Novel mRNA protein coding potential prodict by CPAT-Build Logit Model
 rule Part04_NovelmRNA_Identification_10_CPATBuildLogitModel:
