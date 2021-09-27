@@ -267,12 +267,6 @@ snakemake -p -s LncCir.smk -j <threads> --latency-wait 20
 
 **A:** link `libreadline.so.?` to `libreadline.so.6`. example: `ln -s  /opt/miniconda3/envs/feelnc_env/lib/libreadline.so.8  /opt/miniconda3/envs/feelnc_env/lib/libreadline.so.6`
 
-
-
-**Q:**
-
-**A:**
-
 # Further
 
 More features will be added soon ...
