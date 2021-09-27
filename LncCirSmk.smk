@@ -197,12 +197,12 @@ rule all:
         OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.feature.xls",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.logit.RData",
         OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.make_logitModel.r",
-    # # Step 11: Novel mRNA protein coding potential prodict by CPAT-Detect ORF
-    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_seqs.fa",
-    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.tsv",
-    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.best.tsv",
-    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.no_ORF.txt",
-    #     OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.r",
+    # Step 11: Novel mRNA protein coding potential prodict by CPAT-Detect ORF
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.ORF_seqs.fa",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.ORF_prob.tsv",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.ORF_prob.best.tsv",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.no_ORF.txt",
+        OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.r",
 #   ##
   ## -------------- Part 05 Expression Analysis --------------- ##
     # # Step 01: Re Assembly by Stringtie
@@ -922,7 +922,7 @@ rule Part04_NovelmRNA_Identification_09_CPATBuildHexamerTable:
             os.makedirs(os.path.dirname(output.tsv))
 
         cmd = """
-        source activate cpat_env && \
+        source activate cpat_py3_env && \
         make_hexamer_tab.py -c {cod} -n {noc} > {tsv} 2> {log}
         """.format(cod=input.cod, noc=input.noc, tsv=output.tsv, log=log)
 
@@ -932,9 +932,9 @@ rule Part04_NovelmRNA_Identification_09_CPATBuildHexamerTable:
 # Step 10: Novel mRNA protein coding potential prodict by CPAT-Build Logit Model
 rule Part04_NovelmRNA_Identification_10_CPATBuildLogitModel:
     input:
-        cod = CDNA,
-        noc = NCRNA,
-        hex = OUTPUTDIR + "Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/Maize_Hexamer.tsv"
+        cod = OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_CDS.fa",
+        noc = OUTPUTDIR + "Part04_NovelmRNA_Identification/08.RandomFetchFas/Traning_Noc.fa",
+        hex = OUTPUTDIR + "Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/Maize_Hexamer.tsv",
     output:
         feature = OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.feature.xls",
         rdata = OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.logit.RData",
@@ -942,38 +942,52 @@ rule Part04_NovelmRNA_Identification_10_CPATBuildLogitModel:
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CPATBuildLogitModel.log"
     params:
-        opt = "--min-orf=30",
         pfx = OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize"
-    shell:
-        """
-        source activate cpat_env && \
-        make_logitModel.py {params.opt} -x {input.hex} -c {input.cod} -n {input.noc} -o {params.pfx} --log-file={log}
-        """
+    run:
+        import os
+        import subprocess
+
+        if not os.path.exists(os.path.dirname(output.feature)):
+            os.makedirs(os.path.dirname(output.feature))
+
+        cmd = """
+        source activate cpat_py3_env && \
+        make_logitModel.py -x {hex} -c {cod} -n {noc} -o {pfx} --log-file={log}
+        """.format(hex=input.hex, cod=input.cod, noc=input.noc, pfx=params.pfx, log=log)
+
+        print(cmd)
+        subprocess.call(cmd, shell=True)
 #
 # Step 11: Novel mRNA protein coding potential prodict by CPAT -- Detect ORF
 rule Part04_NovelmRNA_Identification_11_CPATtoDetectORF:
     input:
-        cds = OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.rm_NN.cds",
+        fas = OUTPUTDIR + "Part04_NovelmRNA_Identification/02.FetchCandidateNovelmRNAFas/GffCompared.ju.fa",
+        # OUTPUTDIR + "Part04_NovelmRNA_Identification/04.TransDecoderLongOrfs/longest_orfs.rm_NN.cds",
         hex = OUTPUTDIR + "Part04_NovelmRNA_Identification/09.CPATBuildHexamerTable/Maize_Hexamer.tsv",
         rdata = OUTPUTDIR + "Part04_NovelmRNA_Identification/10.CPATBuildLogitModel/CpatMaize.logit.RData",
     output:
-        seqs = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_seqs.fa"),
-        peob = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.tsv"),
-        best = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.ORF_prob.best.tsv"),
-        norf = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.no_ORF.txt"),
-        rscript = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize.r")
+        seqs = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.ORF_seqs.fa"),
+        peob = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.ORF_prob.tsv"),
+        best = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.ORF_prob.best.tsv"),
+        norf = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.no_ORF.txt"),
+        rscript = protected(OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out.r")
     log:
         OUTPUTDIR + "AllLogs/Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPATtoDetectORF.log"
     params:
-        opt = "--top-orf=5 --antisense --min-orf=100 --width=100 --best-orf=p",
-        pfx = OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CpatMaize"
+        opt = "--top-orf=5 --min-orf=75 --width=100 --best-orf=p",
+        pfx = OUTPUTDIR + "Part04_NovelmRNA_Identification/11.CPATtoDetectORF/CPAT_Predicet_Out"
     threads:
         1
-    shell:
-        """
-        source activate cpat_env && \
-        cpat.py {params.opt} -x {input.hex} -d {input.rdata} -g {input.cds} -o {params.pfx} --log-file={log}
-        """
+    run:
+        import os
+        import subprocess
+
+        cmd = """
+        source activate cpat_py3_env && cpat.py -g {fas} -o {pfx} -x {hex} -d {r} --log-file={log}
+        """.format(hex=input.hex, r=input.rdata, fas=input.fas, pfx=params.pfx, log=log)
+
+        print(cmd)
+        subprocess.call(cmd, shell=True)
 #
 # Step 12: Get Final Novel mRNAs
 rule Part04_NovelmRNA_Identification_12_FinalCandidatemRNAs:

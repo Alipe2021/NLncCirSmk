@@ -76,8 +76,10 @@ chmod 755 Gtf.py gtf2Bed.pl draw_class_pie.R Table.py
 # FEElnc installation
 conda create -n feelnc_env -c bioconda feelnc
 
-# CPAT
-conda create -n cpat_env -c bioconda cpat
+# CPAT3 installation
+conda create -n cpat_py3_env -c conda-forge python=3.9 
+conda install -n cpat_py3_env -c bioconda -c conda-forge pysam numpy r-base=4.1
+pip3 install CPAT
 
 # CIRI packages
 ## CIRIquant
