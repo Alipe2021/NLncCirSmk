@@ -11,7 +11,7 @@ Email: sxliulian2012@hotmail.com
 
 * conda > v3.8.5
 * snakemake > v5.7.0
-* fastp (version: 0.20.1)
+* fastp (version: >= 0.20.1)
 * hisat2 (version: 2.2.1)
 * bowtie2 (version: 2.3.5.1)
 * samtools (version: 1.9)
