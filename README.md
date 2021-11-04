@@ -5,6 +5,27 @@ Author: Peng Liu
 
 Email: sxliulian2012@hotmail.com
 
+# Pre-installation
+
+An effective software management framework is recommended. 
+
+```txt
+/opt
+├── biosoft
+│   ├── bin
+│   │   ├── fastp -> /opt/biosoft/fastp/fastp
+│   │   └── fastqc -> /opt/biosoft/FastQC/fastqc
+├── miniconda3
+│   ├── bin
+│   ├── envs
+│   │   ├── biotools
+│   │   ├── LncCirSmk
+│   │   │   ├── bin
+│   │   │   │   ├── bowtie
+│   │   │   │   ├── bowtie2
+│   │   │   │   ├── snakemake
+```
+
 # Installation
 
 **Dependencies**
