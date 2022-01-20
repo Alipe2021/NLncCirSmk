@@ -1,5 +1,5 @@
-# LncCirSmk
- Snakemake workflow for LncRNA, Circular RNA, and novel mRNA identification.
+# NLncCirSmk
+ Snakemake workflow for Novel mRNA, LncRNA, and Circular RNA identification.
 
 Author: Peng Liu
 
@@ -19,7 +19,7 @@ An effective software management framework is recommended.
 │   ├── bin
 │   ├── envs
 │   │   ├── biotools
-│   │   ├── LncCirSmk
+│   │   ├── NLncCirSmk
 │   │   │   ├── bin
 │   │   │   │   ├── bowtie
 │   │   │   │   ├── bowtie2
@@ -52,7 +52,7 @@ $ bash Miniconda3-latest-Linux-x86_64.sh
 Snakemake can be install with:
 
 ```sh
-conda create -c conda-forge -c bioconda -n LncCirSmk python=3.8 snakemake
+conda create -c conda-forge -c bioconda -n NLncCirSmk python=3 snakemake
 ```
 
 Detail installation guide from: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html
@@ -61,9 +61,9 @@ other packages can be installed by conda:
 
 ```sh
 # install normal softwares
-conda install -n LncCirSmk -c bioconda -c conda-forge fastp bowtie bowtie2 hisat2 bwa
-conda install -n LncCirSmk -c bioconda -c conda-forge stringtie samtools bedtools
-conda install -n LncCirSmk -c bioconda -c conda-forge gffread gffcompare emboss
+conda install -n NLncCirSmk -c bioconda -c conda-forge fastp bowtie bowtie2 hisat2 bwa
+conda install -n NLncCirSmk -c bioconda -c conda-forge stringtie samtools bedtools
+conda install -n NLncCirSmk -c bioconda -c conda-forge gffread gffcompare emboss
 
 # Pfam_scan
 conda create -n pfam_scan_env -c bioconda pfam_scan
@@ -73,6 +73,7 @@ conda create -n cpc2_py3_env -c conda-forge python=3.8
 conda install -n cpc2_py3_env -c bioconda biopython=1.78
 wget -c https://github.com/gao-lab/CPC2_standalone/archive/refs/tags/v1.0.1.tar.gz
 tar zxvf CPC2_standalone-1.0.1.tar.gz
+
 # copy all files in CPC2_standalone-1.0.1/ to your miniconda3 directory
 cp -r CPC2_standalone-1.0.1/* /opt/miniconda3/envs/cpc2_py3_env/
 cd /opt/miniconda3/envs/cpc2_py3_env/
@@ -143,12 +144,12 @@ wget -c ftp://ftp.gramene.org/pub/gramene/release-63/fasta/zea_mays/ncrna/Zea_ma
 wget -c ftp://ftp.gramene.org/pub/gramene/release-63/fasta/zea_mays/pep/Zea_mays.AGPv4.pep.all.fa.gz
 wget -c ftp://ftp.gramene.org/pub/gramene/release-63/gtf/zea_mays/Zea_mays.B73_RefGen_v4.48.gtf.gz
 # 2. uncompression
-gzip -cd Zea_mays.AGPv4.dna.toplevel.fa.gz |cut -f1 > /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
-gzip -cd Zea_mays.AGPv4.cdna.all.fa.gz |cut -f1 > /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_cdna_v4.fa
-gzip -cd Zea_mays.AGPv4.cds.all.fa.gz |cut -f1 > /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_cds_v4.fa
-gzip -cd Zea_mays.AGPv4.ncrna.fa.gz |cut -f1 > /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_ncrna_v4.fa
-gzip -cd Zea_mays.AGPv4.pep.all.fa.gz |cut -f1 > /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_pep_v4.fa
-gzip -cd Zea_mays.B73_RefGen_v4.48.gtf.gz > /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma.v4.48.gtf
+gzip -cd Zea_mays.AGPv4.dna.toplevel.fa.gz |cut -f1 > /Pub/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
+gzip -cd Zea_mays.AGPv4.cdna.all.fa.gz |cut -f1 > /Pub/DataBase/Species/Zea_Mays/B73v4/zma_cdna_v4.fa
+gzip -cd Zea_mays.AGPv4.cds.all.fa.gz |cut -f1 > /Pub/DataBase/Species/Zea_Mays/B73v4/zma_cds_v4.fa
+gzip -cd Zea_mays.AGPv4.ncrna.fa.gz |cut -f1 > /Pub/DataBase/Species/Zea_Mays/B73v4/zma_ncrna_v4.fa
+gzip -cd Zea_mays.AGPv4.pep.all.fa.gz |cut -f1 > /Pub/DataBase/Species/Zea_Mays/B73v4/zma_pep_v4.fa
+gzip -cd Zea_mays.B73_RefGen_v4.48.gtf.gz > /Pub/DataBase/Species/Zea_Mays/B73v4/zma.v4.48.gtf
 # 3. build index
 bowtie-build --threads 24 genome.fa genome.fa 		# build bowtie index for genome
 bowtie2-build --threads 24 genome.fa genome.fa  	# build bowtie2 index for genome
@@ -172,40 +173,38 @@ Fetch protein coding transcripts to build `zma_mrna.v4.44.gtf` and lncRNAs to bu
 
 ```yaml
 ## fasta
-dna: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
-cds: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_cds_v4.fa
-cdna: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_cdna_v4.fa
-ncrna: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_ncrna_v4.fa
-rRNA: /MaizeLab/auhpc1/DataBase/RNAcentral/v16.rRNA/PlantrRNA_RNACentralv16.fa
-mirna: /MaizeLab/auhpc1/DataBase/miRBase/22.1/zma_mature.fa
+dna: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
+cds: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_cds_v4.fa
+cdna: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_cdna_v4.fa
+ncrna: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_ncrna_v4.fa
+rRNA: /Pub/DataBase/RNAcentral/v16.rRNA/PlantrRNA_RNACentralv16.fa
+mirna: /Pub/DataBase/miRBase/22.1/zma_mature.fa
 ## annotation
-bed: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_v4.44.bed
-gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma.v4.44.gtf
-mrna_gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_mrna.v4.44.gtf
-lncrna_gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_lncrna.v4.44.gtf
-go: /MaizeLab/auhpc1/DataBase/GO/zma.go
+bed: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_v4.44.bed
+gtf: /Pub/DataBase/Species/Zea_Mays/B73v4/zma.v4.44.gtf
+mrna_gtf: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_mrna.v4.44.gtf
+lncrna_gtf: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_lncrna.v4.44.gtf
+go: /Pub/DataBase/GO/zma.go
 ## index
-dict: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa.dict
-splice_sites: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/hisat2Index/zma_v4.44.ss
-rRNA_bowtie2_index: /MaizeLab/auhpc1/DataBase/RNAcentral/v16.rRNA/PlantrRNA_RNACentralv16.fa
-genome_bowtie2_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/Bowtie2Index/genome.fa
-genome_hisat2_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/hisat2Index/genome.fa
-genome_bwa_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/BwaIndex/genome.fa
+dict: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa.dict
+splice_sites: /Pub/DataBase/Species/Zea_Mays/B73v4/hisat2Index/zma_v4.44.ss
+rRNA_bowtie2_index: /Pub/DataBase/RNAcentral/v16.rRNA/PlantrRNA_RNACentralv16.fa
+genome_bowtie2_index: /Pub/DataBase/Species/Zea_Mays/B73v4/Bowtie2Index/genome.fa
+genome_hisat2_index: /Pub/DataBase/Species/Zea_Mays/B73v4/hisat2Index/genome.fa
+genome_bwa_index: /Pub/DataBase/Species/Zea_Mays/B73v4/BwaIndex/genome.fa
 ## db
-pfamdb: /MaizeLab/auhpc1/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm
-pfamdt: /MaizeLab/auhpc1/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm.dat
+pfamdb: /Pub/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm
+pfamdt: /Pub/DataBase/Pfam/33.1/Pfam-A/Pfam-A.hmm.dat
 ## DEG Analysis needed
-compare_pairs: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/compare_pairs.txt
-sample_groups: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/sample_groups.txt
-## Trinity needed
-# TrinitySampleList: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/tinity_sample_list.txt
+compare_pairs: /Pub/Project/NLncCirSmk/compare_pairs.txt
+sample_groups: /Pub/Project/NLncCirSmk/sample_groups.txt
 ## CIRI2 needed
-ciri_quant_cfg: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/ciri_quant_cfg.yaml
+ciri_quant_cfg: /Pub/Project/NLncCirSmk/ciri_quant_cfg.yaml
 ### Path to a folder where intermediate files will be written.
-output_dir: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/output.v1/
+output_dir: /Pub/Project/NLncCirSmk/output.v1/
 
 # Path to a YAML file with samples and their corresponding FASTQ files.
-sample_list: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/sample.yaml
+sample_list: /Pub/Project/NLncCirSmk/sample.yaml
 ```
 
 **Note:**
@@ -220,11 +219,11 @@ sample_list: /MaizeLab/auhpc1/liupeng/02.Project/07.LncCirSmk/sample.yaml
 ```yaml
 # sample.yaml
 CK_BML1234_0h1:
-- /MaizeLab/auhpc1/liupeng/88.SeqData/RNASeq.ML.28/RawData/CK280h1_R1.fastq.gz
-- /MaizeLab/auhpc1/liupeng/88.SeqData/RNASeq.ML.28/RawData/CK280h1_R2.fastq.gz
+- /Pub/SeqData/RawData/CK280h1_R1.fastq.gz
+- /Pub/SeqData/RawData/CK280h1_R2.fastq.gz
 CK_BML1234_0h2:
-- /MaizeLab/auhpc1/liupeng/88.SeqData/RNASeq.ML.28/RawData/CK280h2_R1.fastq.gz
-- /MaizeLab/auhpc1/liupeng/88.SeqData/RNASeq.ML.28/RawData/CK280h2_R2.fastq.gz
+- /Pub/SeqData/RawData/CK280h2_R1.fastq.gz
+- /Pub/SeqData/RawData/CK280h2_R2.fastq.gz
 ```
 
 ## compare_pairs
@@ -267,16 +266,16 @@ tools:
   samtools: /opt/miniconda3/envs/LncCirSmk/bin/samtools
 
 reference:
-  fasta: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
-  gtf: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/zma.v4.44.gtf
-  bwa_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/BwaIndex/genome.fa
-  hisat_index: /MaizeLab/auhpc1/DataBase/Species/Zea_Mays/B73v4/hisat2Index/genome.fa
+  fasta: /Pub/DataBase/Species/Zea_Mays/B73v4/zma_dna_v4.fa
+  gtf: /Pub/DataBase/Species/Zea_Mays/B73v4/zma.v4.44.gtf
+  bwa_index: /Pub/DataBase/Species/Zea_Mays/B73v4/BwaIndex/genome.fa
+  hisat_index: /Pub/DataBase/Species/Zea_Mays/B73v4/hisat2Index/genome.fa
 ```
 
 ## Run pipeline
 
 ```sh
-source activate LncCirSmk
+source activate NLncCirSmk
 snakemake -p -s LncCir.smk -j <threads> --latency-wait 20 
 ```
 
