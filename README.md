@@ -5,6 +5,10 @@ Author: Peng Liu
 
 Email: sxliulian2012@hotmail.com
 
+If you use NLncCirSMk in your study, please cite:
+
+Liu, P., Zhang, Y., Zou, C. et al. Integrated analysis of long non-coding RNAs and mRNAs reveals the regulatory network of maize seedling root responding to salt stress. BMC Genomics 23, 50 (2022). https://doi.org/10.1186/s12864-021-08286-7
+
 # Pre-installation
 
 An effective software management framework is recommended. 
